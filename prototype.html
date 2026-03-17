@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ApplyBright</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --coral:#FF5C3A;--coral-dark:#E04828;--coral-mid:rgba(255,92,58,0.15);
+    --bg:#09090D;--surface:#13131A;--surface2:#1A1A23;--surface3:#22222D;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.04);
+    --text:#EFEFF5;--text2:#8A8AA8;--text3:#4A4A65;
+    --green:#22C55E;--green-bg:rgba(34,197,94,0.12);
+    --amber:#F59E0B;--amber-bg:rgba(245,158,11,0.12);
+    --blue:#3B82F6;--blue-bg:rgba(59,130,246,0.12);
+    --red:#EF4444;--red-bg:rgba(239,68,68,0.1);
+    --purple:#a855f7;--purple-bg:rgba(168,85,247,0.12);
+    --gold:#FBBF24;--gold-bg:rgba(251,191,36,0.12);
+  }
+  body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text)}
+  #phone{width:390px;height:812px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column;border-radius:44px;box-shadow:0 40px 100px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.1);margin:20px auto}
+  /* scrollbar hide */
+  ::-webkit-scrollbar{display:none}
+  
+  /* STATUS BAR */
+  .status-bar{height:48px;padding:14px 26px 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;position:relative;z-index:20}
+  .status-bar span:first-child{font-size:15px;font-weight:700;letter-spacing:-0.3px}
+  .status-notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:110px;height:30px;background:#000;border-radius:16px}
+  .status-bar span:last-child{font-size:12px}
+
+  /* SCREENS CONTAINER */
+  .screens{flex:1;overflow:hidden;position:relative}
+  .screen{position:absolute;inset:0;overflow-y:auto;display:none;-ms-overflow-style:none;scrollbar-width:none}
+  .screen.active{display:block}
+  
+  /* TAB BAR */
+  .tab-bar{height:76px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:10px;flex-shrink:0;position:relative;z-index:10}
+  .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:3px 0}
+  .tab-icon{width:44px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:17px;transition:background .2s}
+  .tab-item.active .tab-icon{background:var(--coral-mid)}
+  .tab-label{font-size:10px;font-weight:600;color:var(--text3);transition:color .2s}
+  .tab-item.active .tab-label{color:var(--coral)}
+
+  /* FLOATING BRIGHT BTN */
+  #bright-fab{position:absolute;bottom:86px;right:16px;width:54px;height:54px;background:linear-gradient(135deg,var(--coral),var(--coral-dark));border:none;border-radius:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(255,92,58,0.5);z-index:50;transition:transform .15s,box-shadow .15s;font-family:inherit}
+  #bright-fab:hover{transform:scale(1.1);box-shadow:0 12px 36px rgba(255,92,58,0.65)}
+  #bright-fab .fab-icon{font-size:22px;color:white;font-weight:900}
+  #bright-fab .fab-dot{position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:var(--green);border-radius:50%;border:2.5px solid var(--bg)}
+
+  /* OVERLAYS */
+  .overlay{position:absolute;inset:0;z-index:400;display:none;flex-direction:column}
+  .overlay.open{display:flex}
+  .sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(4px);z-index:300;display:none}
+  .sheet-bg.open{display:block}
+
+  /* PILLS */
+  .pill{display:inline-flex;align-items:center;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+  .pill.green{background:var(--green-bg);color:var(--green)}
+  .pill.amber{background:var(--amber-bg);color:var(--amber)}
+  .pill.blue{background:var(--blue-bg);color:var(--blue)}
+  .pill.coral{background:var(--coral-mid);color:var(--coral)}
+  .pill.gray{background:var(--surface3);color:var(--text2)}
+  .pill.gold{background:var(--gold-bg);color:var(--gold)}
+  .pill.purple{background:var(--purple-bg);color:var(--purple)}
+  .pill.sm{font-size:10px;padding:3px 8px}
+
+  /* SECTION HEADING */
+  .section-label{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+
+  /* BUTTONS */
+  .btn-coral{background:var(--coral);color:white;border:none;border-radius:11px;padding:13px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s}
+  .btn-coral:active{opacity:.85}
+  .btn-ghost{background:var(--surface3);color:var(--text2);border:1px solid var(--border);border-radius:11px;padding:13px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;width:100%}
+
+  /* TOGGLE */
+  .toggle-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border2)}
+  .toggle-row span{font-size:13px;color:var(--text2)}
+  .toggle{width:42px;height:24px;border-radius:12px;background:var(--surface3);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+  .toggle.on{background:var(--coral)}
+  .toggle-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;background:white;border-radius:50%;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .toggle.on .toggle-knob{left:auto;right:3px}
+
+  /* TYPING DOTS */
+  @keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+  @keyframes riseIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  @keyframes glowPulse{0%,100%{box-shadow:0 0 0 8px rgba(255,92,58,0.14),0 0 0 14px rgba(255,92,58,0.04)}50%{box-shadow:0 0 0 18px rgba(255,92,58,0.22),0 0 0 34px rgba(255,92,58,0.09)}}
+  @keyframes popIn{from{transform:scale(0.7);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--text3)}
+  .dot:nth-child(1){animation:bop 1.2s infinite 0s}
+  .dot:nth-child(2){animation:bop 1.2s infinite .2s}
+  .dot:nth-child(3){animation:bop 1.2s infinite .4s}
+
+  /* CHAT BUBBLE */
+  .msg-ai{align-self:flex-start;max-width:88%}
+  .msg-user{align-self:flex-end;max-width:88%}
+  .bubble{padding:11px 14px;border-radius:18px;font-size:14px;line-height:1.55}
+  .bubble.ai{border-bottom-left-radius:5px;background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+  .bubble.user{border-bottom-right-radius:5px;background:var(--coral);color:white}
+  .ai-badge{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--coral),#FF8C42);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:white;margin-bottom:4px}
+
+  /* CARD */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:18px}
+  .subscreen{position:absolute;inset:0;background:var(--bg);z-index:200;display:none;flex-direction:column}
+  .subscreen.open{display:flex}
+  .sub-header{padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;background:var(--surface)}
+  .sub-back{background:var(--surface2);border:none;height:34px;padding:0 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);font-family:inherit}
+
+  /* ONBOARDING */
+  #onboarding{position:absolute;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;overflow:hidden}
+  .orb{width:88px;height:88px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FF8C42,var(--coral));display:flex;align-items:center;justify-content:center;margin:0 auto 28px;position:relative;transition:box-shadow .35s ease;animation:popIn .6s cubic-bezier(.34,1.56,.64,1)}
+  .orb.speaking{box-shadow:0 0 0 18px rgba(255,92,58,.22),0 0 0 34px rgba(255,92,58,.09)}
+  .orb.idle{box-shadow:0 0 0 8px rgba(255,92,58,.14),0 0 0 14px rgba(255,92,58,.04)}
+  .orb-icon{font-size:38px;color:white;font-weight:900;animation:none}
+  .orb.speaking .orb-icon{animation:breathe 1s ease-in-out infinite}
+  .speech-bubble{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px 20px;margin-bottom:28px;position:relative;text-align:left;min-height:100px;width:100%}
+  .speech-bubble::before{content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%) rotate(45deg);width:16px;height:16px;background:var(--surface);border-left:1px solid var(--border);border-top:1px solid var(--border)}
+  #typewriter-text{font-size:16px;font-weight:600;line-height:1.65;color:var(--text);white-space:pre-wrap}
+  .cursor{display:inline;animation:blink .75s step-end infinite;color:var(--coral)}
+  .onb-btn{width:100%;background:linear-gradient(135deg,var(--coral),var(--coral-dark));color:white;border:none;border-radius:16px;padding:17px;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;letter-spacing:-0.3px;box-shadow:0 14px 36px rgba(255,92,58,.4);margin-bottom:12px;animation:riseIn .5s ease}
+  .onb-skip{background:none;border:none;color:var(--text3);font-family:inherit;font-size:13px;cursor:pointer;padding:8px;width:100%;animation:riseIn .5s ease}
+  .dream-textarea{width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:16px;padding:14px 16px;color:var(--text);font-family:inherit;font-size:15px;outline:none;resize:none;line-height:1.5;transition:border-color .2s}
+  .dream-textarea:focus{border-color:var(--coral)}
+  .quick-pill{background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:20px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+  .quick-pill.selected,.quick-pill:hover{background:var(--coral-mid);border-color:rgba(255,92,58,0.3);color:var(--coral)}
+  .build-btn{width:100%;background:var(--surface3);color:var(--text3);border:none;border-radius:14px;padding:16px;font-family:inherit;font-size:16px;font-weight:700;cursor:default;transition:all .2s}
+  .build-btn.ready{background:linear-gradient(135deg,var(--coral),var(--coral-dark));color:white;cursor:pointer;box-shadow:0 12px 32px rgba(255,92,58,.35)}
+
+  /* DREAM STICKY */
+  .dream-sticky{background:linear-gradient(135deg,rgba(251,191,36,.11),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.25);border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;cursor:pointer}
+  .dream-sticky::before{content:"";position:absolute;top:0;right:0;width:0;height:0;border-left:32px solid transparent;border-top:32px solid rgba(251,191,36,.22)}
+  .dream-pin{position:absolute;right:9px;top:6px;font-size:11px;opacity:.7}
+  .dream-icon-box{width:38px;height:38px;background:var(--gold-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid rgba(251,191,36,.2)}
+  .dream-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--gold);margin-bottom:3px}
+  .dream-text{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dream-actions{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+  .dream-ask-btn{background:var(--coral-mid);border:1px solid rgba(255,92,58,.25);color:var(--coral);border-radius:8px;padding:5px 11px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .dream-edit-btn{background:var(--surface3);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:4px 11px;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;text-align:center}
+  .dream-prompt{background:linear-gradient(120deg,var(--coral-mid),rgba(255,92,58,.03));border:1px solid rgba(255,92,58,.2);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+
+  /* HOME HERO */
+  .hero{background:linear-gradient(160deg,#1E1020,#0F0F18);padding:18px 22px 22px;position:relative;overflow:hidden}
+  .hero-glow{position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(255,92,58,.22),transparent 70%);pointer-events:none}
+  .bright-hero-btn{width:46px;height:46px;background:linear-gradient(135deg,var(--coral),#FF8C42);border:none;border-radius:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 22px rgba(255,92,58,.45);position:relative;transition:transform .15s;font-family:inherit}
+  .bright-hero-btn:hover{transform:scale(1.08)}
+  .bright-online{position:absolute;top:-3px;right:-3px;width:11px;height:11px;background:var(--green);border-radius:50%;border:2px solid #1E1020}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .stat-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer}
+  .stat-num{font-size:24px;font-weight:800;letter-spacing:-.8px}
+  .stat-label{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+
+  /* TASK LIST */
+  .task-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden}
+  .task-header{padding:12px 16px 10px;border-bottom:1px solid var(--border2)}
+  .task-progress-bar{flex:1;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
+  .task-progress-fill{height:100%;background:linear-gradient(90deg,var(--coral),#FF8C42);border-radius:3px;transition:width .4s}
+  .task-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border2);cursor:pointer;transition:opacity .2s}
+  .task-item:last-child{border-bottom:none}
+  .task-item.done{opacity:.5}
+  .task-check{width:22px;height:22px;border-radius:7px;border:2px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+  .task-check.checked{border-color:var(--green);background:var(--green)}
+  .task-text{font-size:13px;color:var(--text);line-height:1.4;flex:1}
+  .task-item.done .task-text{text-decoration:line-through;color:var(--text3)}
+
+  /* JOB CARD */
+  .job-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;display:flex;gap:13px;margin-bottom:10px}
+  .job-logo{width:44px;height:44px;border-radius:12px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+  .apply-btn{background:var(--coral);color:white;border:none;border-radius:8px;padding:7px 14px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+  .cl-btn{background:var(--surface3);color:var(--text2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
+
+  /* TRACKER CARD */
+  .tracker-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;display:flex;gap:13px;cursor:pointer;margin-bottom:9px;transition:all .15s}
+  .tracker-card.offer{border-color:rgba(34,197,94,.3);box-shadow:0 0 0 3px rgba(34,197,94,.06)}
+  .priority-dot{width:8px;height:8px;border-radius:50%}
+
+  /* MATCH CARD */
+  .match-card{flex-shrink:0;width:192px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px}
+  .match-pct{font-size:10px;font-weight:700;color:var(--green);background:var(--green-bg);border-radius:6px;padding:2px 7px}
+  .why-btn{flex:1;background:var(--surface3);color:var(--text2);border:1px solid var(--border);border-radius:8px;padding:7px 0;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
+  .apply-sm{flex:1;background:var(--coral);color:white;border:none;border-radius:8px;padding:7px 0;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer}
+
+  /* PROFILE */
+  .profile-hero{background:linear-gradient(160deg,#1A1020,#0C0C10);padding:22px 22px 18px;position:relative;overflow:hidden}
+  .profile-glow{position:absolute;top:-40px;left:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,92,58,.18),transparent 70%);pointer-events:none}
+  .avatar{width:64px;height:64px;background:linear-gradient(135deg,var(--coral),#FF8C42);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:white;flex-shrink:0}
+  .skill-tag{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;font-size:12px;font-weight:600;color:var(--text2)}
+
+  /* AI CHAT */
+  #ai-panel{background:var(--bg);position:absolute;inset:0;z-index:400;display:none;flex-direction:column}
+  #ai-panel.open{display:flex}
+  .chat-header{padding:13px 16px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;background:var(--surface)}
+  .chat-close{background:var(--surface2);border:none;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:14px;color:var(--text2);display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .ai-tag{background:var(--coral-mid);color:var(--coral);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700}
+  .chat-messages{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
+  .typing-indicator{display:flex;gap:4px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:18px;border-bottom-left-radius:5px;width:58px;align-self:flex-start}
+  .chip-row{padding:6px 14px;display:flex;gap:7px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+  .chip{flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;font-family:inherit}
+  .chip:hover{border-color:var(--coral);color:var(--coral)}
+  .chat-input-row{padding:8px 14px 20px;border-top:1px solid var(--border);display:flex;gap:9px;align-items:flex-end;flex-shrink:0;background:var(--surface)}
+  .chat-textarea{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:22px;padding:11px 16px;color:var(--text);font-family:inherit;font-size:14px;outline:none;resize:none;max-height:100px;line-height:1.4}
+  .send-btn{width:40px;height:40px;background:var(--surface3);border:none;border-radius:50%;cursor:pointer;font-size:18px;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;font-family:inherit}
+  .send-btn.ready{background:var(--coral)}
+
+  /* APPLY SHEET */
+  .sheet{position:absolute;bottom:0;left:0;right:0;background:var(--surface2);border-radius:26px 26px 0 0;padding:16px 22px 36px;animation:slideUp .3s ease}
+  .sheet-handle{width:34px;height:4px;background:var(--surface3);border-radius:2px;margin:0 auto 18px}
+  .field-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text2);margin-bottom:6px}
+  .field-input{width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:11px;padding:12px 14px;color:var(--text);font-family:inherit;font-size:14px;outline:none}
+  .field-select{width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:11px;padding:12px 14px;color:var(--text);font-family:inherit;font-size:14px;outline:none}
+
+  /* ALERT */
+  .alert-card{border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+  .alert-card.amber{background:linear-gradient(120deg,rgba(245,158,11,.16),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.22)}
+
+  /* RESOURCES */
+  .featured-res{background:linear-gradient(135deg,#FF5C3A,#FF8C42);border-radius:20px;padding:22px;margin-bottom:18px;position:relative;overflow:hidden;cursor:pointer}
+  .res-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
+  .res-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;cursor:pointer}
+  .res-list-item{display:flex;gap:13px;align-items:center;padding:13px 0;cursor:pointer}
+  .res-icon-box{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+
+  /* RECENT APPS ROW */
+  .recent-app-row{display:flex;align-items:center;gap:12px;padding:13px 0;cursor:pointer}
+  .recent-app-logo{width:40px;height:40px;border-radius:11px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+
+  /* SALARY SUBSCREEN */
+  .salary-range{font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--coral);margin-bottom:4px}
+  .salary-bar{height:8px;background:var(--surface3);border-radius:4px;overflow:hidden;margin-bottom:4px}
+  .salary-fill{height:100%;background:linear-gradient(90deg,var(--coral),#FF8C42);border-radius:4px;transition:width .4s}
+
+  /* RING */
+  .ring-wrap{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:18px}
+</style>
+</head>
+<body>
+
+<div id="phone">
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="status-notch"></div>
+    <span>●●● 🔋</span>
+  </div>
+
+  <!-- SCREENS -->
+  <div class="screens">
+
+    <!-- ════ HOME ════ -->
+    <div class="screen active" id="screen-home">
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-glow"></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:3px" id="greeting">Good morning 👋</div>
+            <div style="font-size:24px;font-weight:800;letter-spacing:-.6px">Hey, <span style="color:var(--coral)">Alex</span></div>
+          </div>
+          <button class="bright-hero-btn" onclick="openAI('bright','What can I help you with today?')">
+            <span style="font-size:20px;color:white;font-weight:900">✦</span>
+            <div class="bright-online"></div>
+          </button>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box" onclick="switchTab('tracker')"><div class="stat-num" style="color:var(--coral)">24</div><div class="stat-label">Applied</div></div>
+          <div class="stat-box" onclick="switchTab('tracker')"><div class="stat-num" style="color:var(--amber)">5</div><div class="stat-label">Interviews</div></div>
+          <div class="stat-box" onclick="switchTab('tracker')"><div class="stat-num" style="color:var(--green)">2</div><div class="stat-label">Offers</div></div>
+        </div>
+      </div>
+
+      <div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px;padding-bottom:30px">
+        <!-- DREAM STICKY -->
+        <div id="dream-section">
+          <!-- filled by JS -->
+        </div>
+
+        <!-- TASK MANAGER -->
+        <div class="task-card" id="task-section">
+          <div class="task-header">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div class="section-label">📋 Today's Tasks</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span style="font-size:10px;color:var(--text3);cursor:pointer" onclick="clearDoneTasks()">Clear done</span>
+                <span style="font-size:12px;color:var(--coral);font-weight:700;cursor:pointer" onclick="openAI('bright','Give me more specific daily tasks to help with my job search today')">✦ Add</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="task-progress-bar"><div class="task-progress-fill" id="task-progress" style="width:0%"></div></div>
+              <span style="font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap" id="task-count">0/0</span>
+            </div>
+          </div>
+          <div id="task-list">
+            <div style="padding:20px 16px;text-align:center">
+              <div style="font-size:13px;color:var(--text3);margin-bottom:8px">No tasks yet</div>
+              <span style="font-size:13px;color:var(--coral);font-weight:700;cursor:pointer" onclick="openAI('bright','Give me daily tasks for my job search today')">✦ Ask Bright to generate tasks</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interview Alert -->
+        <div class="alert-card amber" onclick="openAI('interviewPrep','Google · Software Engineer · Tomorrow 2pm')">
+          <span style="font-size:22px;flex-shrink:0">📅</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:2px">Interview Tomorrow — Prep with AI</div>
+            <div style="font-size:12px;color:var(--text2)">Google · Software Engineer · 2:00 PM</div>
+          </div>
+          <span style="color:var(--text3);font-size:20px">›</span>
+        </div>
+
+        <!-- Top Matches -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span class="section-label">Top Matches</span>
+            <span style="font-size:12px;color:var(--coral);font-weight:700;cursor:pointer" onclick="switchTab('discover')">See all</span>
+          </div>
+          <div style="margin-left:-22px;padding-left:22px;overflow-x:auto;display:flex;gap:12px;padding-right:22px">
+            <div class="match-card">
+              <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+                <div style="width:40px;height:40px;border-radius:11px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem">🟦</div>
+                <button style="background:none;border:none;cursor:pointer;font-size:17px;color:var(--text3)" onclick="this.style.color='#F59E0B';this.textContent='♥'">♡</button>
+              </div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:2px">Frontend Engineer</div>
+              <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Stripe · Remote</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <span style="font-size:12px;font-weight:700;color:var(--coral)">$95–120k</span>
+                <span class="match-pct">96% match</span>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="apply-sm" onclick="openApplySheet('Stripe','Frontend Engineer')">Apply</button>
+                <button class="why-btn" onclick="openAI('jobMatch','Stripe · Frontend Engineer')">Why me?</button>
+              </div>
+            </div>
+            <div class="match-card">
+              <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+                <div style="width:40px;height:40px;border-radius:11px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem">🟧</div>
+                <button style="background:none;border:none;cursor:pointer;font-size:17px;color:var(--text3)" onclick="this.style.color='#F59E0B';this.textContent='♥'">♡</button>
+              </div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:2px">Software Engineer</div>
+              <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Airbnb · NYC</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <span style="font-size:12px;font-weight:700;color:var(--coral)">$100–130k</span>
+                <span class="match-pct">91% match</span>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="apply-sm" onclick="openApplySheet('Airbnb','Software Engineer')">Apply</button>
+                <button class="why-btn" onclick="openAI('jobMatch','Airbnb · Software Engineer')">Why me?</button>
+              </div>
+            </div>
+            <div class="match-card">
+              <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+                <div style="width:40px;height:40px;border-radius:11px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem">🟪</div>
+                <button style="background:none;border:none;cursor:pointer;font-size:17px;color:var(--text3)" onclick="this.style.color='#F59E0B';this.textContent='♥'">♡</button>
+              </div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:2px">Product Designer</div>
+              <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Figma · Austin</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <span style="font-size:12px;font-weight:700;color:var(--coral)">$80–105k</span>
+                <span class="match-pct">88% match</span>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="apply-sm" onclick="openApplySheet('Figma','Product Designer')">Apply</button>
+                <button class="why-btn" onclick="openAI('jobMatch','Figma · Product Designer')">Why me?</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Apps -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span class="section-label">Recent Applications</span>
+            <span style="font-size:12px;color:var(--coral);font-weight:700;cursor:pointer" onclick="switchTab('tracker')">View all</span>
+          </div>
+          <div class="card" style="padding:0 14px">
+            <div class="recent-app-row" style="border-bottom:1px solid var(--border2)" onclick="openAI('interviewPrep','Google · Software Engineer')">
+              <div class="recent-app-logo">🔵</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Software Engineer</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Google · Tap to prep →</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="pill amber">Interview</span><span style="font-size:10px;color:var(--text3)">Tomorrow</span></div>
+            </div>
+            <div class="recent-app-row" style="border-bottom:1px solid var(--border2)" onclick="openAI('salaryNeg','Linear · Design Engineer · Offer')">
+              <div class="recent-app-logo">🟣</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Design Engineer</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Linear · Negotiate →</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="pill green">Offer 🎉</span><span style="font-size:10px;color:var(--text3)">3d ago</span></div>
+            </div>
+            <div class="recent-app-row" onclick="openAI('followUp','Meta · Frontend Engineer')">
+              <div class="recent-app-logo">🔷</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Frontend Engineer</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Meta · Follow up →</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="pill blue">Applied</span><span style="font-size:10px;color:var(--text3)">2d ago</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ DISCOVER ════ -->
+    <div class="screen" id="screen-discover">
+      <div style="padding:18px 22px 12px;position:sticky;top:0;background:var(--bg);z-index:10">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.5px">Discover</div>
+          <button style="background:var(--coral-mid);border:1px solid rgba(255,92,58,.25);color:var(--coral);border-radius:10px;padding:7px 13px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer" onclick="openAI('bright','Help me find the right jobs to apply to based on my dream goal and skills')">✦ Ask Bright</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:12px">
+          <span style="color:var(--text3)">🔍</span>
+          <input placeholder="Search roles, companies…" style="background:none;border:none;outline:none;font-family:inherit;font-size:14px;color:var(--text);flex:1">
+        </div>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px">
+          <button style="flex-shrink:0;padding:7px 15px;border-radius:100px;border:1px solid var(--coral);background:var(--coral);color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">All</button>
+          <button style="flex-shrink:0;padding:7px 15px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Remote</button>
+          <button style="flex-shrink:0;padding:7px 15px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Engineering</button>
+          <button style="flex-shrink:0;padding:7px 15px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Design</button>
+          <button style="flex-shrink:0;padding:7px 15px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Product</button>
+        </div>
+      </div>
+      <div style="padding:4px 22px 24px">
+        <!-- Job cards -->
+        <div class="job-card"><div class="job-logo">🟦</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Frontend Engineer</div><div style="font-size:12px;color:var(--text2);margin-bottom:9px">Stripe · San Francisco</div><div style="display:flex;gap:5px;margin-bottom:9px"><span class="pill green">Remote</span><span class="pill gray">React</span><span class="pill gray">TypeScript</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:var(--coral)">$95–120k</span><div style="display:flex;gap:6px"><button class="cl-btn" onclick="openAI('coverLetter','Stripe · Frontend Engineer')">✉️ Cover Letter</button><button class="apply-btn" onclick="openApplySheet('Stripe','Frontend Engineer')">Apply</button></div></div></div></div>
+        <div class="job-card"><div class="job-logo">🟧</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Software Engineer</div><div style="font-size:12px;color:var(--text2);margin-bottom:9px">Airbnb · New York</div><div style="display:flex;gap:5px;margin-bottom:9px"><span class="pill amber">Hybrid</span><span class="pill gray">Python</span><span class="pill gray">Django</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:var(--coral)">$100–130k</span><div style="display:flex;gap:6px"><button class="cl-btn" onclick="openAI('coverLetter','Airbnb · Software Engineer')">✉️ Cover Letter</button><button class="apply-btn" onclick="openApplySheet('Airbnb','Software Engineer')">Apply</button></div></div></div></div>
+        <div class="job-card"><div class="job-logo">🟪</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Product Designer</div><div style="font-size:12px;color:var(--text2);margin-bottom:9px">Figma · Austin</div><div style="display:flex;gap:5px;margin-bottom:9px"><span class="pill coral">On-site</span><span class="pill gray">Figma</span><span class="pill gray">Research</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:var(--coral)">$80–105k</span><div style="display:flex;gap:6px"><button class="cl-btn" onclick="openAI('coverLetter','Figma · Product Designer')">✉️ Cover Letter</button><button class="apply-btn" onclick="openApplySheet('Figma','Product Designer')">Apply</button></div></div></div></div>
+        <div class="job-card"><div class="job-logo">🟩</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Data Analyst</div><div style="font-size:12px;color:var(--text2);margin-bottom:9px">Spotify · Boston</div><div style="display:flex;gap:5px;margin-bottom:9px"><span class="pill green">Remote</span><span class="pill gray">SQL</span><span class="pill gray">Python</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:var(--coral)">$75–95k</span><div style="display:flex;gap:6px"><button class="cl-btn" onclick="openAI('coverLetter','Spotify · Data Analyst')">✉️ Cover Letter</button><button class="apply-btn" onclick="openApplySheet('Spotify','Data Analyst')">Apply</button></div></div></div></div>
+        <div class="job-card"><div class="job-logo">⚡</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;margin-bottom:2px">DevOps Engineer</div><div style="font-size:12px;color:var(--text2);margin-bottom:9px">Vercel · Remote</div><div style="display:flex;gap:5px;margin-bottom:9px"><span class="pill green">Remote</span><span class="pill gray">K8s</span><span class="pill gray">Terraform</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:var(--coral)">$90–115k</span><div style="display:flex;gap:6px"><button class="cl-btn" onclick="openAI('coverLetter','Vercel · DevOps Engineer')">✉️ Cover Letter</button><button class="apply-btn" onclick="openApplySheet('Vercel','DevOps Engineer')">Apply</button></div></div></div></div>
+      </div>
+    </div>
+
+    <!-- ════ TRACKER ════ -->
+    <div class="screen" id="screen-tracker">
+      <div style="padding:18px 22px 12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.5px">Tracker</div>
+          <div style="display:flex;gap:8px">
+            <button style="background:var(--coral-mid);border:1px solid rgba(255,92,58,.25);color:var(--coral);border-radius:10px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer" onclick="openAI('trackerCoach','Analyse my pipeline and give me strategic next steps')">✦ AI Tips</button>
+            <button style="background:var(--coral);color:white;border:none;border-radius:10px;padding:8px 14px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer" onclick="openApplySheet('','')">+ Add</button>
+          </div>
+        </div>
+        <!-- Ring -->
+        <div class="ring-wrap">
+          <svg width="66" height="66" viewBox="0 0 66 66" style="flex-shrink:0">
+            <circle cx="33" cy="33" r="27" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="6"/>
+            <circle cx="33" cy="33" r="27" fill="none" stroke="var(--coral)" stroke-width="6" stroke-dasharray="169.6" stroke-dashoffset="54" stroke-linecap="round" transform="rotate(-90 33 33)"/>
+            <text x="33" y="38" text-anchor="middle" fill="white" font-family="Plus Jakarta Sans" font-size="14" font-weight="800">68%</text>
+          </svg>
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Response rate</div>
+            <div style="font-size:26px;font-weight:800;letter-spacing:-1px;color:var(--coral);line-height:1">14 / 24</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:3px">companies replied · <span style="color:var(--coral);cursor:pointer;font-weight:700" onclick="openAI('trackerCoach','Give me specific advice to improve my pipeline')">✦ AI tips →</span></div>
+          </div>
+        </div>
+        <!-- Stage tabs -->
+        <div style="display:flex;gap:7px;overflow-x:auto;margin-bottom:14px">
+          <div style="flex-shrink:0;padding:7px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.14);background:var(--surface3);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px">All<span style="background:var(--coral);color:white;border-radius:20px;padding:1px 6px;font-size:10px">7</span></div>
+          <div style="flex-shrink:0;padding:7px 14px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px">Applied<span style="background:var(--surface3);color:var(--text3);border-radius:20px;padding:1px 6px;font-size:10px">2</span></div>
+          <div style="flex-shrink:0;padding:7px 14px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px">Interview<span style="background:var(--surface3);color:var(--text3);border-radius:20px;padding:1px 6px;font-size:10px">2</span></div>
+          <div style="flex-shrink:0;padding:7px 14px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px">Offer<span style="background:var(--surface3);color:var(--text3);border-radius:20px;padding:1px 6px;font-size:10px">2</span></div>
+        </div>
+      </div>
+      <div style="padding:0 22px 24px">
+        <div class="tracker-card offer" onclick="openAI('salaryNeg','Linear · Design Engineer · Offer')"><div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Linear</div><div style="font-size:14px;font-weight:700;letter-spacing:-.3px;margin-bottom:9px">Design Engineer</div><div style="display:flex;gap:7px;align-items:center"><span class="pill green">Offer 🎉</span><span style="font-size:10px;color:var(--text3)">Tap to negotiate →</span></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px"><div class="priority-dot" style="background:var(--red)"></div><span style="font-size:10px;color:var(--text3)">3d ago</span></div></div>
+        <div class="tracker-card offer" onclick="openAI('salaryNeg','Loom · Frontend Engineer · Offer')"><div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Loom</div><div style="font-size:14px;font-weight:700;letter-spacing:-.3px;margin-bottom:9px">Frontend Engineer</div><div style="display:flex;gap:7px;align-items:center"><span class="pill green">Offer 🎉</span><span style="font-size:10px;color:var(--text3)">Tap to negotiate →</span></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px"><div class="priority-dot" style="background:var(--red)"></div><span style="font-size:10px;color:var(--text3)">4d ago</span></div></div>
+        <div class="tracker-card" onclick="openAI('interviewPrep','Google · Software Engineer · Interview tomorrow')"><div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Google</div><div style="font-size:14px;font-weight:700;letter-spacing:-.3px;margin-bottom:9px">Software Engineer</div><div style="display:flex;gap:7px;align-items:center"><span class="pill amber">Interview</span><span style="font-size:10px;color:var(--text3)">Tap to prep →</span></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px"><div class="priority-dot" style="background:var(--amber)"></div><span style="font-size:10px;color:var(--text3)">Tomorrow</span></div></div>
+        <div class="tracker-card" onclick="openAI('interviewPrep','Atlassian · Full-Stack Engineer · Interview')"><div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Atlassian</div><div style="font-size:14px;font-weight:700;letter-spacing:-.3px;margin-bottom:9px">Full-Stack Engineer</div><div style="display:flex;gap:7px;align-items:center"><span class="pill amber">Interview</span><span style="font-size:10px;color:var(--text3)">Tap to prep →</span></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px"><div class="priority-dot" style="background:var(--amber)"></div><span style="font-size:10px;color:var(--text3)">Mar 1</span></div></div>
+        <div class="tracker-card" onclick="openAI('followUp','Meta · Frontend Engineer')"><div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Meta</div><div style="font-size:14px;font-weight:700;letter-spacing:-.3px;margin-bottom:9px">Frontend Engineer</div><div style="display:flex;gap:7px;align-items:center"><span class="pill blue">Applied</span><span style="font-size:10px;color:var(--text3)">Write follow-up →</span></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px"><div class="priority-dot" style="background:var(--green)"></div><span style="font-size:10px;color:var(--text3)">2d ago</span></div></div>
+        <div class="tracker-card" onclick="openAI('followUp','Netflix · Software Engineer')"><div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Netflix</div><div style="font-size:14px;font-weight:700;letter-spacing:-.3px;margin-bottom:9px">Software Engineer</div><div style="display:flex;gap:7px;align-items:center"><span class="pill blue">Applied</span><span style="font-size:10px;color:var(--text3)">Write follow-up →</span></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px"><div class="priority-dot" style="background:var(--green)"></div><span style="font-size:10px;color:var(--text3)">Feb 18</span></div></div>
+        <div class="tracker-card" onclick="openAI('interviewPrep','Apple · iOS Engineer · Screening')"><div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Apple</div><div style="font-size:14px;font-weight:700;letter-spacing:-.3px;margin-bottom:9px">iOS Engineer</div><div style="display:flex;gap:7px;align-items:center"><span class="pill coral">Screening</span><span style="font-size:10px;color:var(--text3)">Write follow-up →</span></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px"><div class="priority-dot" style="background:var(--green)"></div><span style="font-size:10px;color:var(--text3)">Feb 22</span></div></div>
+      </div>
+    </div>
+
+    <!-- ════ RESOURCES ════ -->
+    <div class="screen" id="screen-resources">
+      <div style="padding:18px 22px 12px">
+        <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:16px">Resources</div>
+        <div class="featured-res" onclick="openAI('interviewPrep','Company-specific interview prep with mock questions')">
+          <div style="position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:52px;opacity:.22;pointer-events:none">🎯</div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.65);margin-bottom:5px">🔥 AI-Powered</div>
+          <div style="font-size:18px;font-weight:800;letter-spacing:-.4px;margin-bottom:7px;line-height:1.2">Interview Prep<br>Coach</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.72);margin-bottom:14px;max-width:200px;line-height:1.4">Practice with real questions. Get instant AI feedback.</div>
+          <button style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:7px 15px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">Start now →</button>
+        </div>
+        <div class="section-label" style="margin-bottom:12px">AI Tools</div>
+        <div class="res-grid">
+          <div class="res-box" onclick="openAI('resume','Let\'s review and improve my resume')"><div style="font-size:24px;margin-bottom:10px">📄</div><div style="font-size:13px;font-weight:700;margin-bottom:3px">Resume Coach</div><div style="font-size:11px;color:var(--text2)">AI reviews your CV</div></div>
+          <div class="res-box" onclick="openAI('coverLetter','Generate a tailored cover letter')"><div style="font-size:24px;margin-bottom:10px">✉️</div><div style="font-size:13px;font-weight:700;margin-bottom:3px">Cover Letter AI</div><div style="font-size:11px;color:var(--text2)">Tailored for each job</div></div>
+          <div class="res-box" onclick="openSalary()"><div style="font-size:24px;margin-bottom:10px">💰</div><div style="font-size:13px;font-weight:700;margin-bottom:3px">Salary Tool</div><div style="font-size:11px;color:var(--text2)">Real comp data + AI</div></div>
+          <div class="res-box" onclick="openCareer()"><div style="font-size:24px;margin-bottom:10px">🗺️</div><div style="font-size:13px;font-weight:700;margin-bottom:3px">Career Paths</div><div style="font-size:11px;color:var(--text2)">Visual explorer + AI</div></div>
+        </div>
+        <div class="section-label" style="margin-bottom:4px">AI Guides</div>
+      </div>
+      <div style="padding:0 22px 24px">
+        <div class="res-list-item" style="border-bottom:1px solid var(--border2)" onclick="openAI('networking','Help me write networking outreach')"><div class="res-icon-box" style="background:var(--coral-mid)">🌐</div><div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Networking Coach</div><div style="font-size:11px;color:var(--text2)">AI cold outreach + LinkedIn help</div></div><span style="color:var(--text3);font-size:18px">›</span></div>
+        <div class="res-list-item" style="border-bottom:1px solid var(--border2)" onclick="openAI('interviewPrep','Let\'s practice behavioural interview questions')"><div class="res-icon-box" style="background:var(--amber-bg)">🧠</div><div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Behavioural Interviews</div><div style="font-size:11px;color:var(--text2)">STAR method AI coaching</div></div><span style="color:var(--text3);font-size:18px">›</span></div>
+        <div class="res-list-item" style="border-bottom:1px solid var(--border2)" onclick="openAI('techInterview','Help me prepare for technical interviews')"><div class="res-icon-box" style="background:var(--blue-bg)">💻</div><div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Tech Interview Coach</div><div style="font-size:11px;color:var(--text2)">LeetCode & system design AI</div></div><span style="color:var(--text3);font-size:18px">›</span></div>
+        <div class="res-list-item" style="border-bottom:1px solid var(--border2)" onclick="openAI('careerPath','Help me plan my career path')"><div class="res-icon-box" style="background:var(--green-bg)">🎓</div><div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Career Path Advisor</div><div style="font-size:11px;color:var(--text2)">AI roadmap for your goals</div></div><span style="color:var(--text3);font-size:18px">›</span></div>
+        <div class="res-list-item" onclick="openAI('bright','What can I help you with?')"><div class="res-icon-box" style="background:var(--coral-mid)">✦</div><div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Ask Bright Anything</div><div style="font-size:11px;color:var(--text2)">Your all-in-one AI companion</div></div><span style="color:var(--text3);font-size:18px">›</span></div>
+      </div>
+    </div>
+
+    <!-- ════ PROFILE ════ -->
+    <div class="screen" id="screen-profile">
+      <div class="profile-hero">
+        <div class="profile-glow"></div>
+        <div style="display:flex;align-items:center;gap:15px;margin-bottom:16px">
+          <div class="avatar">AJ</div>
+          <div style="flex:1">
+            <div style="font-size:19px;font-weight:800;letter-spacing:-.5px;margin-bottom:3px">Alex Johnson</div>
+            <div style="font-size:12px;color:var(--text2)">CS · UC Berkeley · '25</div>
+          </div>
+          <button style="background:var(--coral-mid);border:1px solid rgba(255,92,58,.25);color:var(--coral);border-radius:9px;padding:8px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer" onclick="openAI('profileOptimizer','Review my full profile and suggest improvements')">✨ Optimize</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="skill-tag">React</span><span class="skill-tag">TypeScript</span><span class="skill-tag">Node.js</span><span class="skill-tag">Python</span>
+          <span style="border:1px dashed rgba(255,92,58,.3);border-radius:8px;padding:5px 11px;font-size:12px;font-weight:600;color:var(--coral);cursor:pointer" onclick="openAI('profileOptimizer','What skills should I add to my profile for SWE roles?')">+ Add</span>
+        </div>
+      </div>
+      <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;padding-bottom:28px">
+        <!-- Hiring Goal -->
+        <div class="card" style="overflow:hidden">
+          <div style="padding:12px 16px 10px;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+            <span>🌟 Hiring Goal</span>
+            <span style="color:var(--coral);font-size:12px;font-weight:700;cursor:pointer" onclick="openDreamSheet()">Edit</span>
+          </div>
+          <div style="padding:14px 16px" id="profile-dream-section">
+            <div style="font-size:13px;color:var(--text2);margin-bottom:4px">No hiring goal set yet</div>
+            <span style="font-size:12px;color:var(--coral);font-weight:600;cursor:pointer" onclick="openAI('bright','Help me define my dream job and hiring goal')">✦ Chat with Bright to define it →</span>
+          </div>
+        </div>
+        <!-- Prefs -->
+        <div class="card" style="overflow:hidden">
+          <div style="padding:12px 16px 10px;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border2)">Job Preferences</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border2)"><span style="font-size:13px;color:var(--text2)">Job Type</span><span style="font-size:13px;font-weight:600">Full-time</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border2)"><span style="font-size:13px;color:var(--text2)">Work Mode</span><span style="font-size:13px;font-weight:600">Remote · Hybrid</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border2)"><span style="font-size:13px;color:var(--text2)">Locations</span><span style="font-size:13px;font-weight:600">SF · NYC</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px"><span style="font-size:13px;color:var(--text2)">Min Salary</span><span style="font-size:13px;font-weight:600">$80,000 / yr</span></div>
+        </div>
+        <!-- Notifications -->
+        <div class="card" style="overflow:hidden">
+          <div style="padding:12px 16px 10px;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border2)">Notifications</div>
+          <div class="toggle-row"><span>New matches</span><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div></div>
+          <div class="toggle-row"><span>Application updates</span><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div></div>
+          <div class="toggle-row"><span>Interview reminders</span><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div></div>
+          <div class="toggle-row"><span>Offer deadlines</span><div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div></div>
+          <div class="toggle-row" style="border-bottom:none"><span>Weekly digest</span><div class="toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div></div>
+        </div>
+        <button class="btn-coral" onclick="openAI('resume','Let\'s review and strengthen my resume')">📄 Review Resume with AI</button>
+        <button class="btn-ghost" onclick="openAI('salaryNeg','Help me understand my salary range and negotiate')">💰 Salary Negotiation Coach</button>
+        <button style="width:100%;background:var(--coral-mid);color:var(--coral);border:1px solid rgba(255,92,58,.25);border-radius:14px;padding:16px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer" onclick="openAI('bright','Give me a full plan this week to reach my career goal')">✦ Chat with Bright AI</button>
+      </div>
+    </div>
+
+    <!-- ════ SALARY SUBSCREEN ════ -->
+    <div class="subscreen" id="salary-screen">
+      <div class="sub-header">
+        <button class="sub-back" onclick="closeSalary()">‹ Back</button>
+        <span style="font-size:16px;font-weight:800;flex:1;text-align:center">💰 Salary Tool</span>
+        <div style="width:60px"></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:20px 18px">
+        <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin-bottom:7px">Role</div>
+          <select id="sal-role" onchange="updateSalary()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:13px;padding:12px 14px;color:var(--text);font-family:inherit;font-size:14px;outline:none">
+            <option value="fe">Frontend Engineer</option><option value="swe">Software Engineer</option><option value="pm">Product Manager</option><option value="design">Product Designer</option><option value="data">Data Analyst</option>
+          </select></div>
+        <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin-bottom:7px">Location</div>
+          <select id="sal-loc" onchange="updateSalary()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:13px;padding:12px 14px;color:var(--text);font-family:inherit;font-size:14px;outline:none">
+            <option value="sf">San Francisco</option><option value="ny">New York</option><option value="remote">Remote</option><option value="austin">Austin</option><option value="seattle">Seattle</option>
+          </select></div>
+        <div class="card" style="padding:20px;margin-bottom:14px">
+          <div class="salary-range" id="sal-range">$95k – $130k</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:16px" id="sal-sub">Frontend Engineer · San Francisco · New Grad</div>
+          <div class="salary-bar"><div class="salary-fill" id="sal-fill" style="width:50%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span id="sal-min">$95k</span><span style="color:var(--coral);font-weight:700" id="sal-med">$112k median</span><span id="sal-max">$130k</span></div>
+        </div>
+        <div style="padding:11px 0;border-bottom:1px solid var(--border2);display:flex;gap:10px"><span style="font-size:18px">💡</span><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong style="color:var(--text);display:block;margin-bottom:2px">Always negotiate</strong>First offer is rarely best — always counter.</div></div>
+        <div style="padding:11px 0;border-bottom:1px solid var(--border2);display:flex;gap:10px"><span style="font-size:18px">📊</span><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong style="color:var(--text);display:block;margin-bottom:2px">Total comp matters</strong>Include equity, bonus, benefits when comparing.</div></div>
+        <div style="padding:11px 0;display:flex;gap:10px"><span style="font-size:18px">🎯</span><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong style="color:var(--text);display:block;margin-bottom:2px">Anchor high</strong>State a number 15–20% above your minimum.</div></div>
+        <button class="btn-coral" style="margin-top:16px" onclick="closeSalary();openAI('salaryNeg','Help me negotiate my salary')">Negotiate with AI →</button>
+      </div>
+    </div>
+
+    <!-- ════ CAREER SUBSCREEN ════ -->
+    <div class="subscreen" id="career-screen">
+      <div class="sub-header">
+        <button class="sub-back" onclick="closeCareer()">‹ Back</button>
+        <span style="font-size:16px;font-weight:800;flex:1;text-align:center">🗺️ Career Paths</span>
+        <div style="width:60px"></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:20px 18px">
+        <div class="card" style="padding:14px;margin-bottom:20px"><div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em">Your profile</div><div style="font-size:15px;font-weight:700;margin-bottom:3px">CS · React · TypeScript · Python</div><div style="font-size:12px;color:var(--text2)">Strong foundation for multiple paths</div></div>
+        <div class="section-label" style="margin-bottom:12px">🚀 Engineering Track</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid var(--border2);cursor:pointer" onclick="closeCareer();openAI('careerPath','Tell me about the Frontend Engineer → Senior path')"><div style="display:flex;flex-direction:column;align-items:center"><div style="width:32px;height:32px;border-radius:50%;background:var(--coral);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white">1</div><div style="width:2px;height:18px;background:var(--border);margin-top:4px"></div></div><div style="flex:1;padding-top:4px"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Frontend Engineer</div><div style="font-size:12px;color:var(--text2);margin-bottom:7px">Entry-level · React, TypeScript</div><div style="display:flex;gap:6px"><span class="pill green sm">Now</span><span style="font-size:11px;color:var(--text3)">$95–120k</span></div></div></div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid var(--border2);cursor:pointer" onclick="closeCareer();openAI('careerPath','How do I become a Senior Frontend Engineer?')"><div style="display:flex;flex-direction:column;align-items:center"><div style="width:32px;height:32px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white">2</div><div style="width:2px;height:18px;background:var(--border);margin-top:4px"></div></div><div style="flex:1;padding-top:4px"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Senior Frontend Eng.</div><div style="font-size:12px;color:var(--text2);margin-bottom:7px">2–3 yrs · Lead features, mentor</div><div style="display:flex;gap:6px"><span class="pill blue sm">2–3 yrs</span><span style="font-size:11px;color:var(--text3)">$140–175k</span></div></div></div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:13px 0;cursor:pointer" onclick="closeCareer();openAI('careerPath','What does it take to become Staff Engineer?')"><div style="display:flex;flex-direction:column;align-items:center"><div style="width:32px;height:32px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white">3</div></div><div style="flex:1;padding-top:4px"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Staff / Eng Lead</div><div style="font-size:12px;color:var(--text2);margin-bottom:7px">5+ yrs · Architecture, team lead</div><div style="display:flex;gap:6px"><span class="pill amber sm">5+ yrs</span><span style="font-size:11px;color:var(--text3)">$190–250k</span></div></div></div>
+        <div class="section-label" style="margin:20px 0 12px">🎨 → Product</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid var(--border2);cursor:pointer" onclick="closeCareer();openAI('careerPath','How do I transition from engineering to product management?')"><div style="display:flex;flex-direction:column;align-items:center"><div style="width:32px;height:32px;border-radius:50%;background:var(--coral);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white">1</div><div style="width:2px;height:18px;background:var(--border);margin-top:4px"></div></div><div style="flex:1;padding-top:4px"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Frontend Engineer</div><div style="font-size:12px;color:var(--text2);margin-bottom:7px">Build product sense & analytics</div><div style="display:flex;gap:6px"><span class="pill green sm">Now</span><span style="font-size:11px;color:var(--text3)">$95–120k</span></div></div></div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:13px 0;cursor:pointer" onclick="closeCareer();openAI('careerPath','What skills do I need to become a PM from engineering?')"><div style="width:32px;height:32px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;flex-shrink:0">2</div><div style="flex:1;padding-top:4px"><div style="font-size:14px;font-weight:700;margin-bottom:2px">Associate PM</div><div style="font-size:12px;color:var(--text2);margin-bottom:7px">2–3 yr pivot · product strategy</div><div style="display:flex;gap:6px"><span class="pill purple sm">2–3 yrs</span><span style="font-size:11px;color:var(--text3)">$130–165k</span></div></div></div>
+        <button class="btn-coral" style="margin-top:20px" onclick="closeCareer();openAI('careerPath','Help me choose and plan the best career path')">Chat with AI Career Advisor →</button>
+      </div>
+    </div>
+
+    <!-- ════ AI CHAT PANEL ════ -->
+    <div id="ai-panel">
+      <div class="chat-header">
+        <button class="chat-close" onclick="closeAI()">✕</button>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:800;letter-spacing:-.3px" id="chat-title">✦ Bright</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:1px" id="chat-subtitle">Your AI career companion</div>
+        </div>
+        <div class="ai-tag">✦ AI</div>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chip-row" id="chip-row"></div>
+      <div class="chat-input-row">
+        <textarea class="chat-textarea" id="chat-input" placeholder="Type anything…" rows="1" onkeydown="handleChatKey(event)" oninput="updateSendBtn()"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">↑</button>
+      </div>
+    </div>
+
+    <!-- ════ ONBOARDING ════ -->
+    <div id="onboarding">
+      <div style="position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:500px;height:500px;background:radial-gradient(circle,rgba(255,92,58,.1),transparent 65%);pointer-events:none"></div>
+      <div id="onb-intro" style="width:100%;text-align:center;position:relative;z-index:1">
+        <div class="orb speaking" id="bright-orb">
+          <span class="orb-icon">✦</span>
+        </div>
+        <div class="speech-bubble">
+          <div id="typewriter-text"></div><span class="cursor" id="cursor">|</span>
+        </div>
+        <div id="onb-buttons" style="display:none">
+          <button class="onb-btn" onclick="goToDream()">Let's define my dream →</button>
+          <button class="onb-skip" onclick="skipOnboarding()">Skip — I'll explore on my own</button>
+        </div>
+      </div>
+
+      <div id="onb-dream" style="width:100%;position:relative;z-index:1;display:none;animation:riseIn .4s ease">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px">
+          <div style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--coral),#FF8C42);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 20px rgba(255,92,58,.35)"><span style="font-size:19px;font-weight:900;color:white">✦</span></div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;border-top-left-radius:4px;padding:12px 14px;font-size:14px;font-weight:500;line-height:1.5;flex:1">What's your dream role or company? Be specific or vague — I'll help shape it. 🎯</div>
+        </div>
+        <textarea id="dream-input" class="dream-textarea" rows="3" placeholder="e.g. Software Engineer at Google, work in fintech, PM at a fast-growing startup…" oninput="updateBuildBtn()"></textarea>
+        <div style="margin-bottom:18px;margin-top:10px">
+          <div class="section-label" style="margin-bottom:8px">Quick picks</div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap" id="quick-picks"></div>
+        </div>
+        <button class="build-btn" id="build-btn" onclick="buildPlan()">Build my action plan ✦</button>
+        <button class="onb-skip" onclick="skipOnboarding()">Skip for now</button>
+      </div>
+
+      <div id="onb-loading" style="text-align:center;width:100%;position:relative;z-index:1;display:none;animation:riseIn .3s ease">
+        <div style="width:72px;height:72px;margin:0 auto 24px;border-radius:50%;background:linear-gradient(135deg,var(--coral),var(--coral-dark));display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 12px rgba(255,92,58,.15),0 0 0 24px rgba(255,92,58,.06);animation:breathe 1.5s ease-in-out infinite"><span style="font-size:28px;color:white;font-weight:900">✦</span></div>
+        <div style="font-size:18px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px">Building your plan…</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6">Bright is analysing your goal<br>and creating personalised tasks.</div>
+        <div style="display:flex;gap:6px;justify-content:center;margin-top:20px"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+
+      <div id="onb-plan" style="width:100%;position:relative;z-index:1;display:none;overflow-y:auto;max-height:100%;padding-bottom:8px">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+          <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--coral),#FF8C42);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:18px;font-weight:900;color:white">✦</span></div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;border-top-left-radius:4px;padding:12px 14px;font-size:14px;line-height:1.55;flex:1"><strong style="color:var(--coral)">Dream set! ✦</strong> I've pinned your goal to your home screen and built today's action plan. You're already one step closer! 🎉</div>
+        </div>
+        <div style="background:linear-gradient(120deg,rgba(251,191,36,.12),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.25);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <span style="font-size:24px">🌟</span>
+          <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin-bottom:3px">Your Dream Goal</div><div style="font-size:15px;font-weight:700" id="plan-dream-text"></div></div>
+        </div>
+        <div class="card" style="overflow:hidden;margin-bottom:20px">
+          <div style="padding:12px 16px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);border-bottom:1px solid var(--border2)">📋 Today's Action Plan</div>
+          <div id="plan-tasks"></div>
+        </div>
+        <button class="onb-btn" onclick="finishOnboarding()">Take me to ApplyBright →</button>
+      </div>
+    </div>
+
+    <!-- APPLY SHEET BG -->
+    <div class="sheet-bg" id="apply-bg" onclick="closeApplySheet()"></div>
+    <div id="apply-sheet-wrap" style="position:absolute;inset:0;z-index:310;pointer-events:none;display:none">
+      <div class="sheet" id="apply-sheet" style="pointer-events:all">
+        <div class="sheet-handle"></div>
+        <div style="font-size:18px;font-weight:800;letter-spacing:-.4px;margin-bottom:18px">Add Application</div>
+        <div style="margin-bottom:13px"><div class="field-label">Company</div><input id="sheet-company" class="field-input" placeholder="e.g. Google"></div>
+        <div style="margin-bottom:13px"><div class="field-label">Role</div><input id="sheet-role" class="field-input" placeholder="e.g. Software Engineer"></div>
+        <div style="margin-bottom:13px"><div class="field-label">Status</div><select id="sheet-status" class="field-select"><option>Applied</option><option>Screening</option><option>Interview</option><option>Offer</option></select></div>
+        <div style="display:flex;gap:9px;margin-top:16px">
+          <button class="btn-ghost" style="flex:1" onclick="closeApplySheet()">Cancel</button>
+          <button class="btn-coral" style="flex:2" onclick="saveApplication()">Save Application</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DREAM EDIT SHEET BG -->
+    <div class="sheet-bg" id="dream-bg" onclick="closeDreamSheet()"></div>
+    <div id="dream-sheet-wrap" style="position:absolute;inset:0;z-index:310;pointer-events:none;display:none">
+      <div class="sheet" id="dream-sheet" style="pointer-events:all">
+        <div class="sheet-handle"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:22px">🌟</span><div><div style="font-size:18px;font-weight:800;letter-spacing:-.4px">Update Dream Goal</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Pinned to your home screen always</div></div></div>
+        <textarea id="dream-edit-input" class="dream-textarea" rows="3" placeholder="e.g. Software Engineer at Google, PM at Stripe…" oninput="updateDreamSaveBtn()"></textarea>
+        <div style="display:flex;gap:9px;margin-top:16px">
+          <button class="btn-ghost" style="flex:1" onclick="closeDreamSheet()">Cancel</button>
+          <button id="dream-save-btn" style="flex:2;background:var(--surface3);color:var(--text3);border:none;border-radius:11px;padding:13px;font-family:inherit;font-size:14px;font-weight:700;cursor:default;transition:all .2s" onclick="saveDream()">Save Dream</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end screens -->
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <div class="tab-item active" data-tab="home" onclick="switchTab('home')"><div class="tab-icon">🏠</div><span class="tab-label">Home</span></div>
+    <div class="tab-item" data-tab="discover" onclick="switchTab('discover')"><div class="tab-icon">🔍</div><span class="tab-label">Discover</span></div>
+    <div class="tab-item" data-tab="tracker" onclick="switchTab('tracker')"><div class="tab-icon">📋</div><span class="tab-label">Tracker</span></div>
+    <div class="tab-item" data-tab="resources" onclick="switchTab('resources')"><div class="tab-icon">📚</div><span class="tab-label">Learn</span></div>
+    <div class="tab-item" data-tab="profile" onclick="switchTab('profile')"><div class="tab-icon">👤</div><span class="tab-label">Me</span></div>
+  </div>
+
+  <!-- FLOATING BRIGHT FAB -->
+  <button id="bright-fab" onclick="openAI('bright','Hi! What can I help you with today?')">
+    <span class="fab-icon">✦</span>
+    <div class="fab-dot"></div>
+  </button>
+
+</div><!-- end phone -->
+
+<script>
+// ── STATE ──
+let dreamGoal = "";
+let tasks = [];
+let currentAIKey = "bright";
+let chatHistory = [];
+let showingChips = true;
+let isLoading = false;
+
+// ── GREETING ──
+const h = new Date().getHours();
+document.getElementById("greeting").textContent = (h<12?"Good morning":h<18?"Good afternoon":"Good evening") + " 👋";
+
+// ── AI CONFIGS ──
+const CONFIGS = {
+  bright:{title:"Bright",icon:"✦",subtitle:"Your AI career companion",
+    system:`You are Bright — the AI soul of ApplyBright, a Siri-like career companion for Alex Johnson (CS, UC Berkeley 2025, React/TypeScript/Node.js/Python). Personality: warm, energetic, concise — like a smart career-obsessed best friend. You can help define dream jobs, generate numbered tasks (Task 1:, Task 2:), guide navigation, and coach on career strategy. When confirming a dream say "Dream set! ✦" on its own line. Tasks must be numbered, specific, actionable, under 10 words. Keep responses under 200 words. Use **bold** for emphasis.`,
+    opening:"Hey Alex! 👋 I'm **Bright** — your personal AI inside ApplyBright.\n\nThink of me like Siri, but for your career. I can:\n🎯 Define your dream job and build a plan\n📋 Create your daily action tasks\n🧭 Navigate you to the right tools\n\n**What's your dream role or company?**",
+    chips:["My dream is Google SWE","Help me apply for jobs today","Give me tasks for today","Guide me through the app"]
+  },
+  resume:{title:"Resume Coach",icon:"📄",subtitle:"Rewrite & strengthen your CV",
+    system:"Expert resume coach for Alex Johnson (CS, Berkeley 2025, React/TS/Node/Python). XYZ-formula rewrites. Ask for content if not shared. Specific and concise.",
+    opening:"Let's make your resume impossible to ignore 📄\n\nPaste any section and I'll rewrite it with **strong, metric-driven bullets** — or tell me which part to work on!",
+    chips:["Fix experience bullets","Make ATS-friendly","Tailor for Stripe","Review my summary"]
+  },
+  coverLetter:{title:"Cover Letter AI",icon:"✉️",subtitle:"Tailored letters that get read",
+    system:"Expert cover letter writer. Alex Johnson (CS, Berkeley 2025, React/TS/Python). 3 tight paragraphs: hook → why them → close. Never start 'I am writing to apply'.",
+    opening:"Let's write a letter people actually read ✉️\n\nWhich **company and role**? I'll draft something personal and compelling instantly.",
+    chips:["Write for Stripe","Write for Google SWE","Make it shorter","More personality"]
+  },
+  interviewPrep:{title:"Interview Coach",icon:"🎯",subtitle:"Practice with real AI feedback",
+    system:"Expert interview coach. Alex preparing for Google, Meta, Stripe, Airbnb. Do mock interviews: ask a question, await answer, give STAR-based feedback.",
+    opening:"Let's crush that interview! 🎯\n\nWhich **company and role** are you preparing for?\n\nI'll run a full mock round with real feedback on every answer.",
+    chips:["Mock Google SWE","Tell me about yourself","System design basics","STAR method practice"]
+  },
+  salaryNeg:{title:"Salary Negotiation",icon:"💰",subtitle:"Word-for-word scripts",
+    system:"Salary negotiation expert for new CS grads. Word-for-word scripts, specific counter numbers, total comp advice. Direct with dollar amounts.",
+    opening:"Let's get you paid what you're worth! 💰\n\nTell me the **offer details** and I'll give you an exact negotiation script — dollar amounts and exactly what to say.",
+    chips:["I got a $120k offer","Counter-offer script","How much should I ask?","Two competing offers"]
+  },
+  followUp:{title:"Follow-Up Email",icon:"📮",subtitle:"Get a response",
+    system:"Professional warm follow-up emails for Alex Johnson. Under 150 words. Human not corporate.",
+    opening:"I'll write a follow-up that actually gets a reply 📮\n\nWhich **company, stage**, and how long since you heard from them?",
+    chips:["Applied 2 weeks ago","After first interview","After final round","Ghosted — follow up?"]
+  },
+  jobMatch:{title:"Match Explainer",icon:"🔬",subtitle:"Why you're a fit",
+    system:"AI job match explainer for Alex (CS, Berkeley 2025, React/TS/Node/Python). Skill overlaps, gaps, positioning tips.",
+    opening:"Here's your match breakdown 🔬\n\n✅ React · TypeScript · Node.js — core matches\n⚠️ Production scale (typical new-grad gap)\n\n**Strong overall fit.** Want tips on closing gaps?",
+    chips:["How to close skill gaps","Tailor my resume","What to say in interview","Is this right for me?"]
+  },
+  networking:{title:"Networking Coach",icon:"🌐",subtitle:"Outreach that works",
+    system:"Networking expert for new grads. Non-cringey LinkedIn DMs, alumni emails, coffee chat requests.",
+    opening:"Let's build your network the right way 🌐\n\nI'll give you **templates people actually respond to**.\n\nWho are you trying to reach?",
+    chips:["LinkedIn DM to engineer","Alumni referral email","Coffee chat request","Cold email recruiter"]
+  },
+  trackerCoach:{title:"Search Coach",icon:"📊",subtitle:"Maximize your pipeline",
+    system:"Job search coach. Alex: 24 applications, 5 interviews, 2 offers, 68% response rate. Strategic pipeline advice.",
+    opening:"Your pipeline is performing well 📊\n\n**68% response rate** (industry avg: 30%) ✅\n**2 offers pending** — real leverage.\n\nWhat do you want to focus on?",
+    chips:["Use two offers as leverage","Who to follow up on","Extend offer deadline","Priority order"]
+  },
+  techInterview:{title:"Tech Interview",icon:"💻",subtitle:"LeetCode & system design",
+    system:"Technical interview coach. LeetCode patterns (approach + complexity before code). System design with structured framework.",
+    opening:"Let's level up technical skills 💻\n\nShare a problem you're stuck on, or pick a topic:\n• **LeetCode patterns**\n• **System design**\n• **Big-O analysis**",
+    chips:["Two pointers pattern","Design URL shortener","Dynamic programming","Review my solution"]
+  },
+  careerPath:{title:"Career Advisor",icon:"🗺️",subtitle:"Long-term path planning",
+    system:"Career advisor for CS new grads. Startup vs big tech, paths to senior. Honest about timelines and comp.",
+    opening:"Let's map out your career 🗺️\n\n**Path A** — Frontend → Eng Lead (~$200k in 6 yrs)\n**Path B** — SWE → PM (~$190k in 5 yrs)\n**Path C** — Startup + equity\n\nWhat's your biggest career question?",
+    chips:["Startup vs big tech","How fast to senior?","Switch to PM?","5-year plan"]
+  },
+  profileOptimizer:{title:"Profile Optimizer",icon:"✨",subtitle:"Boost your match score",
+    system:"Profile optimization. Help Alex improve headline, summary, skills for recruiter attention.",
+    opening:"Let's get your profile to 95%+ match rate ✨\n\nRight now:\n🔴 Headline could be sharper\n🟡 Summary missing keywords\n🟢 3 more skills = 40% more visibility\n\nWhere do you want to start?",
+    chips:["Rewrite my headline","Write a summary","Skills to add","Full audit"]
+  },
+};
+
+// ── TABS ──
+function switchTab(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".tab-item").forEach(t => t.classList.remove("active"));
+  document.getElementById("screen-"+id).classList.add("active");
+  document.querySelector(`[data-tab="${id}"]`).classList.add("active");
+}
+
+// ── DREAM ──
+function renderDreamSection() {
+  const ds = document.getElementById("dream-section");
+  if (dreamGoal) {
+    ds.innerHTML = `
+      <div class="dream-sticky" onclick="openDreamSheet()">
+        <div class="dream-pin">📌</div>
+        <div class="dream-icon-box">🌟</div>
+        <div style="flex:1;min-width:0">
+          <div class="dream-label">Dream Goal · pinned</div>
+          <div class="dream-text">${dreamGoal}</div>
+        </div>
+        <div class="dream-actions">
+          <button class="dream-ask-btn" onclick="event.stopPropagation();openAI('bright','I need specific help making progress toward: ${dreamGoal.replace(/'/g,"\\'")}. Give me next steps and tasks.')">✦ Ask Bright</button>
+          <button class="dream-edit-btn" onclick="event.stopPropagation();openDreamSheet()">Edit</button>
+        </div>
+      </div>`;
+  } else {
+    ds.innerHTML = `
+      <div class="dream-prompt" onclick="openAI('bright','Help me define my dream job and hiring goal')">
+        <div style="width:38px;height:38px;background:var(--coral-mid);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌟</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--coral);margin-bottom:2px">Set your dream goal</div>
+          <div style="font-size:12px;color:var(--text2)">Tell Bright your dream role → get a personalised plan</div>
+        </div>
+        <span style="color:var(--text3);font-size:22px">›</span>
+      </div>`;
+  }
+  // Profile section
+  const pd = document.getElementById("profile-dream-section");
+  if (pd) {
+    if (dreamGoal) {
+      pd.innerHTML = `<div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">${dreamGoal}</div><span style="font-size:12px;color:var(--coral);cursor:pointer;font-weight:600" onclick="openAI('bright','Build me a detailed week-by-week plan to achieve: ${dreamGoal.replace(/'/g,"\\'")}')">✦ Ask Bright to build a plan →</span>`;
+    } else {
+      pd.innerHTML = `<div style="font-size:13px;color:var(--text2);margin-bottom:4px">No hiring goal set yet</div><span style="font-size:12px;color:var(--coral);font-weight:600;cursor:pointer" onclick="openAI('bright','Help me define my dream job and hiring goal')">✦ Chat with Bright to define it →</span>`;
+    }
+  }
+}
+
+// ── TASKS ──
+function renderTasks() {
+  const list = document.getElementById("task-list");
+  const done = tasks.filter(t=>t.done).length;
+  const total = tasks.length;
+  document.getElementById("task-count").textContent = `${done}/${total}${done===total&&total>0?" ✓":""}`;
+  document.getElementById("task-progress").style.width = total>0?`${(done/total)*100}%`:"0%";
+  if (total === 0) {
+    list.innerHTML = `<div style="padding:20px 16px;text-align:center"><div style="font-size:13px;color:var(--text3);margin-bottom:8px">No tasks yet</div><span style="font-size:13px;color:var(--coral);font-weight:700;cursor:pointer" onclick="openAI('bright','Give me daily tasks for my job search today')">✦ Ask Bright to generate tasks</span></div>`;
+    return;
+  }
+  list.innerHTML = tasks.map((t,i) => `
+    <div class="task-item${t.done?" done":""}" onclick="toggleTask(${i})">
+      <div class="task-check${t.done?" checked":" "}">${t.done?"<span style='color:white;font-size:11px;font-weight:900;line-height:1'>✓</span>":""}</div>
+      <span class="task-text">${t.text}</span>
+    </div>`).join("");
+}
+
+function toggleTask(i) { tasks[i].done = !tasks[i].done; renderTasks(); }
+function clearDoneTasks() { tasks = tasks.filter(t=>!t.done); renderTasks(); }
+
+// ── APPLY SHEET ──
+function openApplySheet(co, role) {
+  document.getElementById("sheet-company").value = co||"";
+  document.getElementById("sheet-role").value = role||"";
+  document.getElementById("apply-bg").classList.add("open");
+  document.getElementById("apply-sheet-wrap").style.display = "block";
+}
+function closeApplySheet() {
+  document.getElementById("apply-bg").classList.remove("open");
+  document.getElementById("apply-sheet-wrap").style.display = "none";
+}
+function saveApplication() {
+  const co = document.getElementById("sheet-company").value.trim();
+  const ro = document.getElementById("sheet-role").value.trim();
+  if (co && ro) { closeApplySheet(); switchTab("tracker"); }
+  else { closeApplySheet(); }
+}
+
+// ── DREAM SHEET ──
+function openDreamSheet() {
+  document.getElementById("dream-edit-input").value = dreamGoal;
+  document.getElementById("dream-bg").classList.add("open");
+  document.getElementById("dream-sheet-wrap").style.display = "block";
+  updateDreamSaveBtn();
+}
+function closeDreamSheet() {
+  document.getElementById("dream-bg").classList.remove("open");
+  document.getElementById("dream-sheet-wrap").style.display = "none";
+}
+function updateDreamSaveBtn() {
+  const v = document.getElementById("dream-edit-input").value.trim();
+  const btn = document.getElementById("dream-save-btn");
+  btn.style.background = v ? "var(--coral)" : "var(--surface3)";
+  btn.style.color = v ? "white" : "var(--text3)";
+  btn.style.cursor = v ? "pointer" : "default";
+}
+function saveDream() {
+  const v = document.getElementById("dream-edit-input").value.trim();
+  if (!v) return;
+  dreamGoal = v;
+  closeDreamSheet();
+  renderDreamSection();
+}
+
+// ── SALARY TOOL ──
+const SAL_DATA = {fe:{sf:[95,130,112],ny:[92,128,108],remote:[88,120,102],austin:[85,115,98],seattle:[90,125,106]},swe:{sf:[100,140,118],ny:[98,138,116],remote:[92,128,108],austin:[90,122,104],seattle:[95,135,112]},pm:{sf:[110,150,128],ny:[108,148,126],remote:[100,138,118],austin:[98,130,112],seattle:[105,142,122]},design:{sf:[80,115,95],ny:[78,112,93],remote:[72,105,86],austin:[70,100,82],seattle:[76,110,90]},data:{sf:[75,105,88],ny:[73,102,86],remote:[68,95,79],austin:[65,92,76],seattle:[70,100,83]}};
+const ROLE_NAMES={fe:"Frontend Engineer",swe:"Software Engineer",pm:"Product Manager",design:"Product Designer",data:"Data Analyst"};
+const LOC_NAMES={sf:"San Francisco",ny:"New York",remote:"Remote",austin:"Austin",seattle:"Seattle"};
+function updateSalary() {
+  const role = document.getElementById("sal-role").value;
+  const loc = document.getElementById("sal-loc").value;
+  const d = SAL_DATA[role][loc];
+  const pct = Math.round(((d[2]-d[0])/(d[1]-d[0]))*100);
+  document.getElementById("sal-range").textContent = `$${d[0]}k – $${d[1]}k`;
+  document.getElementById("sal-sub").textContent = `${ROLE_NAMES[role]} · ${LOC_NAMES[loc]} · New Grad`;
+  document.getElementById("sal-fill").style.width = `${pct}%`;
+  document.getElementById("sal-min").textContent = `$${d[0]}k`;
+  document.getElementById("sal-med").textContent = `$${d[2]}k median`;
+  document.getElementById("sal-max").textContent = `$${d[1]}k`;
+}
+function openSalary() { document.getElementById("salary-screen").classList.add("open"); }
+function closeSalary() { document.getElementById("salary-screen").classList.remove("open"); }
+function openCareer() { document.getElementById("career-screen").classList.add("open"); }
+function closeCareer() { document.getElementById("career-screen").classList.remove("open"); }
+
+// ── AI CHAT ──
+function openAI(key, contextNote) {
+  currentAIKey = key;
+  const cfg = CONFIGS[key] || CONFIGS.bright;
+  document.getElementById("chat-title").textContent = `${cfg.icon} ${cfg.title}`;
+  document.getElementById("chat-subtitle").textContent = contextNote || cfg.subtitle;
+  chatHistory = [];
+  showingChips = true;
+  renderMessages([{role:"ai",text:cfg.opening}]);
+  renderChips(cfg.chips);
+  document.getElementById("chat-input").value = "";
+  updateSendBtn();
+  document.getElementById("ai-panel").classList.add("open");
+  document.getElementById("bright-fab").style.display = "none";
+  setTimeout(()=>document.getElementById("chat-input").focus(), 350);
+}
+function closeAI() {
+  document.getElementById("ai-panel").classList.remove("open");
+  document.getElementById("bright-fab").style.display = "flex";
+}
+
+function fmt(text) {
+  return text.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>");
+}
+
+function renderMessages(msgs) {
+  const container = document.getElementById("chat-messages");
+  container.innerHTML = msgs.map(m => {
+    if (m.role === "typing") return `<div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+    const isAI = m.role === "ai";
+    return `<div class="msg-${isAI?"ai":"user"}">
+      ${isAI?`<div class="ai-badge">✦</div>`:""}
+      <div class="bubble ${isAI?"ai":"user"}">${fmt(m.text)}</div>
+    </div>`;
+  }).join("");
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderChips(chips) {
+  const row = document.getElementById("chip-row");
+  if (!showingChips || !chips?.length) { row.innerHTML = ""; return; }
+  row.innerHTML = chips.map(c=>`<button class="chip" onclick="sendMessage('${c.replace(/'/g,"\\'")}')"> ${c}</button>`).join("");
+}
+
+function updateSendBtn() {
+  const v = document.getElementById("chat-input").value.trim();
+  const btn = document.getElementById("send-btn");
+  btn.classList.toggle("ready", !!v && !isLoading);
+}
+
+function handleChatKey(e) {
+  if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function sendMessage(override) {
+  const input = document.getElementById("chat-input");
+  const msg = (override || input.value).trim();
+  if (!msg || isLoading) return;
+  input.value = ""; updateSendBtn();
+  showingChips = false;
+  chatHistory.push({role:"user", content:msg});
+  const msgs = [{role:"ai",text:(CONFIGS[currentAIKey]||CONFIGS.bright).opening}, ...chatHistory.slice(0,-1).map(m=>({role:m.role==="assistant"?"ai":"user",text:m.content})), {role:"user",text:msg}];
+  renderMessages(msgs);
+  renderChips([]);
+  isLoading = true;
+  const withTyping = [...msgs, {role:"typing"}];
+  renderMessages(withTyping);
+  document.getElementById("chat-messages").scrollTop = 99999;
+
+  const cfg = CONFIGS[currentAIKey] || CONFIGS.bright;
+  const apiMsgs = chatHistory.length===1 ? [{role:"user",content:msg}] : chatHistory;
+  let reply = "";
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:900,system:cfg.system,messages:apiMsgs})
+    });
+    const d = await res.json();
+    reply = d.content?.[0]?.text || "Connection issue — please try again!";
+  } catch { reply = "Connection issue — please try again!"; }
+
+  chatHistory.push({role:"assistant", content:reply});
+  const finalMsgs = [{role:"ai",text:cfg.opening}, ...chatHistory.map(m=>({role:m.role==="assistant"?"ai":"user",text:m.content}))];
+  renderMessages(finalMsgs);
+  isLoading = false; updateSendBtn();
+
+  // Handle dream + tasks from Bright
+  if (currentAIKey==="bright") {
+    if (reply.includes("Dream set!")) {
+      const cleaned = msg.replace(/^(my dream is to? |my dream is |i want to )/i,"").trim();
+      if (cleaned.length>3) { dreamGoal=cleaned; renderDreamSection(); }
+    }
+    const taskLines = reply.match(/task \d+:\s*(.+)/gi);
+    if (taskLines?.length>=2) {
+      tasks = taskLines.slice(0,5).map((l,i)=>({id:i,text:l.replace(/task \d+:\s*/i,"").trim(),done:false}));
+      renderTasks();
+    }
+  }
+}
+
+// ── ONBOARDING ──
+const GREET = "Hi, Alex!\nI'm Bright — your AI career companion.\nI live right here in ApplyBright.\nLet me help you define your dream\nand build a plan to get there.";
+const QUICK_PICKS = ["Software Engineer at Google","Frontend Engineer at Stripe","Product Designer at Apple","Data Scientist at Airbnb","Full-Stack Engineer at a startup"];
+
+let typeIdx = 0;
+function typeWriter() {
+  const el = document.getElementById("typewriter-text");
+  const orb = document.getElementById("bright-orb");
+  if (typeIdx < GREET.length) {
+    el.textContent = GREET.slice(0, ++typeIdx);
+    setTimeout(typeWriter, 28);
+  } else {
+    orb.classList.remove("speaking"); orb.classList.add("idle");
+    document.getElementById("cursor").style.display = "none";
+    document.getElementById("onb-buttons").style.display = "block";
+  }
+}
+setTimeout(typeWriter, 600);
+
+// Quick picks
+document.getElementById("quick-picks").innerHTML = QUICK_PICKS.map(d=>
+  `<button class="quick-pill" onclick="selectQuickPick(this,'${d.replace(/'/g,"\\'")}')"> ${d}</button>`).join("");
+
+function selectQuickPick(el, val) {
+  document.querySelectorAll(".quick-pill").forEach(b=>b.classList.remove("selected"));
+  el.classList.add("selected");
+  document.getElementById("dream-input").value = val;
+  updateBuildBtn();
+}
+function updateBuildBtn() {
+  const v = document.getElementById("dream-input").value.trim();
+  const btn = document.getElementById("build-btn");
+  btn.classList.toggle("ready", !!v);
+  btn.style.cursor = v ? "pointer" : "default";
+}
+
+function goToDream() {
+  document.getElementById("onb-intro").style.display = "none";
+  document.getElementById("onb-dream").style.display = "block";
+}
+function skipOnboarding() {
+  document.getElementById("onboarding").style.display = "none";
+  renderDreamSection(); renderTasks();
+}
+
+async function buildPlan() {
+  const dream = document.getElementById("dream-input").value.trim();
+  if (!dream) return;
+  dreamGoal = dream;
+  document.getElementById("onb-dream").style.display = "none";
+  document.getElementById("onb-loading").style.display = "block";
+
+  let reply = "";
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:350,
+        system:"You are Bright, an enthusiastic AI career companion. Generate exactly 4 specific daily action tasks. Format each as 'Task 1: [action verb + target, under 10 words]'. Be specific to the dream. After tasks, add one motivating sentence starting with '✦'.",
+        messages:[{role:"user",content:`My dream: ${dream}`}]})
+    });
+    const d = await res.json();
+    reply = d.content?.[0]?.text || "";
+  } catch{}
+
+  const matched = (reply.match(/task \d+:\s*(.+)/gi)||[]).slice(0,4).map(l=>l.replace(/task \d+:\s*/i,"").trim());
+  tasks = (matched.length>=2?matched:["Research top 5 companies in your field","Apply to 2 matching roles on Discover tab","Update resume with a strong summary","Connect with 1 engineer on LinkedIn today"])
+    .map((t,i)=>({id:i,text:t,done:false}));
+
+  document.getElementById("plan-dream-text").textContent = dream;
+  document.getElementById("plan-tasks").innerHTML = tasks.map((t,i)=>`
+    <div style="display:flex;gap:12px;padding:12px 16px;${i<tasks.length-1?"border-bottom:1px solid var(--border2)":""}align-items:flex-start">
+      <div style="width:24px;height:24px;border-radius:8px;background:var(--coral-mid);color:var(--coral);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${i+1}</div>
+      <span style="font-size:13px;line-height:1.45">${t.text}</span>
+    </div>`).join("");
+
+  document.getElementById("onb-loading").style.display = "none";
+  document.getElementById("onb-plan").style.display = "block";
+}
+
+function finishOnboarding() {
+  document.getElementById("onboarding").style.display = "none";
+  renderDreamSection();
+  renderTasks();
+}
+
+// Initial render
+renderDreamSection();
+renderTasks();
+</script>
+</body>
+</html>

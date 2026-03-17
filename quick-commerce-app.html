@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZipBasket — Quick Commerce Prototype</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  body { margin: 0; padding: 0; background: linear-gradient(145deg, #F0F4F8, #E2E8F0); }
+  * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+
+// ─── DATA ──────────────────────────────────────────────────────────────
+const PRODUCTS = [
+  { id: 1, name: "Doritos Cheese Nachos", weight: "2.1 oz", price: 3.49, badge: "8", img: "🔴", category: "snacks", source: "flash" },
+  { id: 2, name: "Large White Eggs", weight: "Half-Dozen", price: 3.99, badge: "8", img: "🥚", category: "dairy", source: "flash" },
+  { id: 3, name: "Kerrygold Butter", weight: "8 oz", price: 5.49, badge: "10", img: "🧈", category: "dairy", source: "flash" },
+  { id: 4, name: "Green Bell Pepper", weight: "1 ct", price: 1.29, badge: "8", img: "🫑", category: "vegetables", source: "flash" },
+  { id: 5, name: "Coca-Cola", weight: "20 oz", price: 2.49, badge: "8", img: "🥤", category: "beverages", source: "flash" },
+  { id: 6, name: "Nissin Cup Noodles", weight: "2.5 oz", price: 1.29, badge: "8", img: "🍜", category: "snacks", source: "flash" },
+  { id: 7, name: "Whole Milk", weight: "16 oz", price: 2.79, badge: "8", img: "🥛", category: "dairy", source: "flash" },
+  { id: 8, name: "Banana Bunch", weight: "6 pcs", price: 1.99, badge: "8", img: "🍌", category: "fruits", source: "flash" },
+  { id: 9, name: "Bread Loaf", weight: "20 oz", price: 3.49, badge: "9", img: "🍞", category: "bakery", source: "flash" },
+  { id: 10, name: "Yellow Onion", weight: "1 lb", price: 1.49, badge: "8", img: "🧅", category: "vegetables", source: "flash" },
+  { id: 11, name: "Lays Classic", weight: "2.6 oz", price: 2.49, badge: "8", img: "🟡", category: "snacks", source: "flash" },
+  { id: 12, name: "Greek Yogurt", weight: "16 oz", price: 4.29, badge: "9", img: "🫙", category: "dairy", source: "flash" },
+];
+
+const STORES = [
+  {
+    id: "s1", name: "Sunrise Bakery", type: "Bakery & Cakes", emoji: "🥐", distance: "0.4 mi",
+    eta: "18", rating: 4.6, reviews: 128, color: "#FFF3E0", accent: "#E65100",
+    tagline: "Fresh baked daily since 1998",
+    products: [
+      { id: 101, name: "Sourdough Loaf", weight: "1 lb", price: 6.99, img: "🍞", category: "bread" },
+      { id: 102, name: "Chocolate Croissant", weight: "2 pcs", price: 5.49, img: "🥐", category: "pastry" },
+      { id: 103, name: "Red Velvet Cake", weight: "6 inch", price: 24.99, img: "🎂", category: "cake" },
+      { id: 104, name: "Garlic Baguette", weight: "10 oz", price: 4.49, img: "🥖", category: "bread" },
+      { id: 105, name: "Blueberry Muffin", weight: "2 pcs", price: 4.99, img: "🧁", category: "pastry" },
+      { id: 106, name: "Cinnamon Roll", weight: "2 pcs", price: 5.99, img: "🍩", category: "pastry" },
+    ],
+  },
+  {
+    id: "s2", name: "Green Valley Organics", type: "Organic & Health", emoji: "🌿", distance: "0.7 mi",
+    eta: "22", rating: 4.8, reviews: 87, color: "#E8F5E9", accent: "#2E7D32",
+    tagline: "Certified organic, farm to table",
+    products: [
+      { id: 201, name: "Organic Avocado", weight: "2 pcs", price: 3.99, img: "🥑", category: "produce" },
+      { id: 202, name: "Quinoa", weight: "16 oz", price: 6.49, img: "🌾", category: "grains" },
+      { id: 203, name: "Almond Milk", weight: "32 oz", price: 4.99, img: "🥛", category: "dairy-alt" },
+      { id: 204, name: "Organic Honey", weight: "12 oz", price: 8.99, img: "🍯", category: "pantry" },
+      { id: 205, name: "Chia Seeds", weight: "8 oz", price: 5.99, img: "🫘", category: "superfoods" },
+      { id: 206, name: "Kale Bunch", weight: "1 bunch", price: 2.99, img: "🥬", category: "produce" },
+    ],
+  },
+  {
+    id: "s3", name: "MedPlus Pharmacy", type: "Pharmacy & Wellness", emoji: "💊", distance: "0.3 mi",
+    eta: "15", rating: 4.5, reviews: 312, color: "#E3F2FD", accent: "#1565C0",
+    tagline: "Health essentials, always in stock",
+    products: [
+      { id: 301, name: "Tylenol", weight: "24 ct", price: 7.99, img: "💊", category: "medicine" },
+      { id: 302, name: "Vitamin C", weight: "60 ct", price: 9.99, img: "🍊", category: "supplements" },
+      { id: 303, name: "Band-Aid Pack", weight: "20 pcs", price: 4.49, img: "🩹", category: "first-aid" },
+      { id: 304, name: "Hand Sanitizer", weight: "8 oz", price: 3.99, img: "🧴", category: "hygiene" },
+      { id: 305, name: "Digital Thermometer", weight: "1 pc", price: 12.99, img: "🌡️", category: "devices" },
+      { id: 306, name: "Protein Bar", weight: "6 pcs", price: 11.99, img: "🍫", category: "nutrition" },
+    ],
+  },
+  {
+    id: "s4", name: "Paws & Whiskers", type: "Pet Supplies", emoji: "🐾", distance: "1.1 mi",
+    eta: "25", rating: 4.7, reviews: 64, color: "#FFF8E1", accent: "#F57F17",
+    tagline: "Everything for your furry friends",
+    products: [
+      { id: 401, name: "Dog Kibble", weight: "3 lb", price: 12.99, img: "🐕", category: "dog-food" },
+      { id: 402, name: "Cat Treats", weight: "3 oz", price: 4.99, img: "🐈", category: "cat-food" },
+      { id: 403, name: "Chew Toy", weight: "1 pc", price: 7.99, img: "🦴", category: "toys" },
+      { id: 404, name: "Pet Shampoo", weight: "8 oz", price: 8.49, img: "🧴", category: "grooming" },
+      { id: 405, name: "Cat Litter", weight: "10 lb", price: 14.99, img: "🪣", category: "essentials" },
+      { id: 406, name: "Fish Food", weight: "3 oz", price: 5.49, img: "🐟", category: "fish" },
+    ],
+  },
+  {
+    id: "s5", name: "Prime Meats", type: "Meat & Seafood", emoji: "🥩", distance: "0.6 mi",
+    eta: "20", rating: 4.4, reviews: 198, color: "#FCE4EC", accent: "#C62828",
+    tagline: "Premium cuts, delivered fresh",
+    products: [
+      { id: 501, name: "Chicken Breast", weight: "1 lb", price: 6.99, img: "🍗", category: "poultry" },
+      { id: 502, name: "Salmon Fillet", weight: "8 oz", price: 11.99, img: "🐟", category: "seafood" },
+      { id: 503, name: "Lamb Chops", weight: "1 lb", price: 16.99, img: "🥩", category: "red-meat" },
+      { id: 504, name: "Shrimp", weight: "8 oz", price: 9.99, img: "🦐", category: "seafood" },
+      { id: 505, name: "Farm Fresh Eggs", weight: "12 pcs", price: 5.49, img: "🥚", category: "eggs" },
+      { id: 506, name: "Sausage Links", weight: "12 oz", price: 6.49, img: "🌭", category: "processed" },
+    ],
+  },
+  {
+    id: "s6", name: "QuickFix Electronics", type: "Electronics & Accessories", emoji: "🔌", distance: "1.3 mi",
+    eta: "28", rating: 4.3, reviews: 56, color: "#EDE7F6", accent: "#4527A0",
+    tagline: "Chargers, cables & quick fixes",
+    products: [
+      { id: 601, name: "USB-C Cable", weight: "3 ft", price: 9.99, img: "🔌", category: "cables" },
+      { id: 602, name: "Power Bank", weight: "10000 mAh", price: 24.99, img: "🔋", category: "chargers" },
+      { id: 603, name: "Earbuds", weight: "1 pair", price: 19.99, img: "🎧", category: "audio" },
+      { id: 604, name: "Phone Stand", weight: "1 pc", price: 7.99, img: "📱", category: "accessories" },
+      { id: 605, name: "LED Bulb", weight: "9W", price: 4.99, img: "💡", category: "lighting" },
+      { id: 606, name: "Extension Cord", weight: "10 ft", price: 12.99, img: "🔌", category: "electrical" },
+    ],
+  },
+];
+
+const CATEGORIES = [
+  { id: "all", name: "All", icon: "🏪" },
+  { id: "snacks", name: "Snacks", icon: "🍿" },
+  { id: "dairy", name: "Dairy", icon: "🥛" },
+  { id: "vegetables", name: "Veggies", icon: "🥬" },
+  { id: "fruits", name: "Fruits", icon: "🍎" },
+  { id: "beverages", name: "Drinks", icon: "🥤" },
+  { id: "bakery", name: "Bakery", icon: "🍞" },
+];
+
+const USER_ADDRESS = {
+  label: "Home", line1: "Hayward, CA 94544", line2: "East Bay, California", full: "Hayward, CA 94544",
+};
+
+// ─── SHARED COMPONENTS ─────────────────────────────────────────────────
+
+function LiveTimer({ minutes = 8, compact, bright }) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => { const t = setInterval(() => setElapsed((e) => e + 1), 1000); return () => clearInterval(t); }, []);
+  const totalSec = minutes * 60 - elapsed;
+  const m = Math.max(0, Math.floor(totalSec / 60));
+  const s = Math.max(0, totalSec % 60);
+  if (compact) return (
+    <span style={{ fontVariantNumeric: "tabular-nums", color: bright ? "#FFD700" : "#1F8C3B", fontWeight: 800 }}>
+      {m}:{s.toString().padStart(2, "0")}
+    </span>
+  );
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 3, fontVariantNumeric: "tabular-nums" }}>
+      <span style={{ fontSize: 28, fontWeight: 900, color: bright ? "#FFD700" : "#1F8C3B", lineHeight: 1 }}>
+        {m}:{s.toString().padStart(2, "0")}
+      </span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: bright ? "rgba(255,215,0,0.7)" : "#6BBF7B", marginLeft: 2 }}>mins left</span>
+    </div>
+  );
+}
+
+function SpeedPulse({ size = 64, children }) {
+  return (
+    <div style={{ position: "relative", width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2px solid #1F8C3B", opacity: 0.4, animation: "speedPulse 2s ease-out infinite" }} />
+      <div style={{ position: "absolute", inset: -6, borderRadius: "50%", border: "1.5px solid #1F8C3B", opacity: 0.2, animation: "speedPulse 2s ease-out 0.4s infinite" }} />
+      {children}
+    </div>
+  );
+}
+
+function Confetti() {
+  const colors = ["#FFD700", "#1F8C3B", "#FF6B35", "#E8475F", "#4A90D9", "#9B59B6"];
+  const pieces = Array.from({ length: 50 }, (_, i) => ({
+    id: i, left: Math.random() * 100, delay: Math.random() * 0.8,
+    duration: 1.2 + Math.random() * 1, color: colors[i % colors.length],
+    rotation: Math.random() * 360, size: 6 + Math.random() * 8,
+    shape: Math.random() > 0.5 ? "circle" : "rect",
+  }));
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 10 }}>
+      {pieces.map((p) => (
+        <div key={p.id} style={{
+          position: "absolute", left: `${p.left}%`, top: "-10%",
+          width: p.shape === "circle" ? p.size : p.size * 0.6, height: p.size,
+          backgroundColor: p.color, borderRadius: p.shape === "circle" ? "50%" : "2px",
+          transform: `rotate(${p.rotation}deg)`,
+          animation: `confettiFall ${p.duration}s ${p.delay}s ease-in forwards`, opacity: 0,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function SpeedBadge({ mins, isStore }) {
+  if (isStore) return (
+    <div style={{
+      position: "absolute", top: 6, left: 6, borderRadius: 6,
+      padding: "2px 7px", fontSize: 9, fontWeight: 800, letterSpacing: 0.3,
+      display: "flex", alignItems: "center", gap: 3,
+      background: "linear-gradient(135deg, #455A64, #607D8B)", color: "#fff",
+    }}>
+      <span style={{ fontSize: 8 }}>🏪</span>{mins} MIN
+    </div>
+  );
+  return (
+    <div style={{
+      position: "absolute", top: 6, left: 6, borderRadius: 6,
+      padding: "2px 7px", fontSize: 9, fontWeight: 800, letterSpacing: 0.3,
+      display: "flex", alignItems: "center", gap: 3,
+      background: "linear-gradient(135deg, #0B3D1F, #1F8C3B)", color: "#FFD700",
+      boxShadow: "0 1px 4px rgba(31,140,59,0.3)",
+    }}>
+      <span style={{ fontSize: 8 }}>⚡</span>{mins} MIN
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════════════════════
+function QuickCommerceApp() {
+  const [screen, setScreen] = useState("onboard1");
+  const [cart, setCart] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [animatingItems, setAnimatingItems] = useState({});
+  const [activeStore, setActiveStore] = useState(null);
+
+  // Build a unified product lookup: flash + all store products
+  const allProducts = [...PRODUCTS, ...STORES.flatMap((s) => s.products.map((p) => ({ ...p, source: s.id, storeName: s.name, storeEta: s.eta })))];
+  const findProduct = (id) => allProducts.find((p) => p.id === Number(id));
+
+  const cartItems = Object.entries(cart).filter(([, q]) => q > 0).map(([id, qty]) => {
+    const p = findProduct(id);
+    return p ? { ...p, qty } : null;
+  }).filter(Boolean);
+
+  const flashItems = cartItems.filter((i) => i.source === "flash");
+  const storeItems = cartItems.filter((i) => i.source !== "flash");
+  // Group store items by store
+  const storeGroups = {};
+  storeItems.forEach((item) => {
+    if (!storeGroups[item.source]) {
+      const store = STORES.find((s) => s.id === item.source);
+      storeGroups[item.source] = { store, items: [] };
+    }
+    storeGroups[item.source].items.push(item);
+  });
+
+  const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
+  const cartTotal = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+
+  const addToCart = (id) => {
+    setAnimatingItems((p) => ({ ...p, [id]: true }));
+    setTimeout(() => setAnimatingItems((p) => ({ ...p, [id]: false })), 300);
+    setCart((p) => ({ ...p, [id]: (p[id] || 0) + 1 }));
+  };
+  const removeFromCart = (id) => setCart((p) => ({ ...p, [id]: Math.max((p[id] || 0) - 1, 0) }));
+
+  const filteredProducts = PRODUCTS.filter((p) => {
+    const matchCat = activeCategory === "all" || p.category === activeCategory;
+    const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
+  const placeOrder = () => { setScreen("placed"); setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000); };
+  const resetOrder = () => { setCart({}); setScreen("home"); };
+
+  const openStore = (store) => { setActiveStore(store); setScreen("store"); };
+
+  // ─── PHONE SHELL ─────────────────────────────────────────────────────
+  const Phone = ({ children, dark }) => (
+    <div style={{
+      width: 375, height: 812, borderRadius: 44, overflow: "hidden", position: "relative",
+      background: dark ? "#0B3D1F" : "#FFFFFF",
+      boxShadow: "0 25px 80px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)",
+      fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      display: "flex", flexDirection: "column",
+    }}>
+      <div style={{
+        height: 54, padding: "14px 28px 0", display: "flex", justifyContent: "space-between",
+        alignItems: "center", flexShrink: 0, color: dark ? "#fff" : "#000", fontSize: 15, fontWeight: 600, zIndex: 20,
+      }}>
+        <span>9:41</span>
+        <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="5" y="2" width="3" height="10" rx="1"/><rect x="10" y="0" width="3" height="12" rx="1"/></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2.4C5.6 2.4 3.4 3.4 1.8 5l1.4 1.4C4.4 5.2 6.1 4.4 8 4.4s3.6.8 4.8 2l1.4-1.4C12.6 3.4 10.4 2.4 8 2.4zM8 6.4c-1.4 0-2.6.6-3.4 1.4L6 9.2c.5-.5 1.2-.8 2-.8s1.5.3 2 .8l1.4-1.4C10.6 7 9.4 6.4 8 6.4zM8 10.4c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1z"/></svg>
+          <svg width="27" height="13" viewBox="0 0 27 13" fill="currentColor"><rect x="0" y="1" width="22" height="11" rx="2" fillOpacity="0.3"/><rect x="1" y="2" width="18" height="9" rx="1"/><rect x="23" y="4.5" width="2.5" height="4" rx="1"/></svg>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+
+  // ─── QTY STEPPER ─────────────────────────────────────────────────────
+  const QtyStepper = ({ id, qty, small }) => (
+    <div style={{ display: "flex", alignItems: "center", background: "#1F8C3B", borderRadius: 8, overflow: "hidden" }}>
+      <button onClick={() => removeFromCart(id)} style={{
+        width: small ? 26 : 30, height: small ? 26 : 30, border: "none", background: "transparent",
+        color: "#fff", fontSize: small ? 14 : 16, fontWeight: 700, cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>−</button>
+      <span style={{ minWidth: small ? 18 : 22, textAlign: "center", color: "#fff", fontSize: small ? 12 : 13, fontWeight: 700 }}>{qty}</span>
+      <button onClick={() => addToCart(id)} style={{
+        width: small ? 26 : 30, height: small ? 26 : 30, border: "none", background: "transparent",
+        color: "#fff", fontSize: small ? 14 : 16, fontWeight: 700, cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>+</button>
+    </div>
+  );
+
+  // ─── PRODUCT CARD ────────────────────────────────────────────────────
+  const ProductCard = ({ product, isStore, storeEta }) => {
+    const qty = cart[product.id] || 0;
+    const isAnim = animatingItems[product.id];
+    return (
+      <div style={{
+        background: "#fff", borderRadius: 12, border: "1px solid #F0F0F0",
+        padding: 10, display: "flex", flexDirection: "column", gap: 6,
+        transition: "transform 0.15s", transform: isAnim ? "scale(0.96)" : "scale(1)",
+        position: "relative", overflow: "hidden",
+      }}>
+        <SpeedBadge mins={isStore ? storeEta : product.badge} isStore={isStore} />
+        <div style={{ fontSize: 36, textAlign: "center", padding: "14px 0 4px" }}>{product.img}</div>
+        <div>
+          <div style={{ fontSize: 11.5, fontWeight: 600, color: "#1A1A1A", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{product.name}</div>
+          <div style={{ fontSize: 10, color: "#888", marginTop: 1 }}>{product.weight}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>${product.price.toFixed(2)}</span>
+            {qty === 0 ? (
+              <button onClick={() => addToCart(product.id)} style={{
+                background: "#fff", border: "1.5px solid #1F8C3B", borderRadius: 8,
+                padding: "4px 14px", fontSize: 12, fontWeight: 700, color: "#1F8C3B", cursor: "pointer",
+              }}>ADD</button>
+            ) : <QtyStepper id={product.id} qty={qty} small />}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── BOTTOM NAV ──────────────────────────────────────────────────────
+  const BottomNav = ({ active }) => (
+    <div style={{
+      height: 68, background: "#fff", borderTop: "1px solid #eee",
+      display: "flex", justifyContent: "space-around", alignItems: "center",
+      padding: "0 10px", flexShrink: 0, position: "relative", zIndex: 15,
+    }}>
+      {[
+        { id: "home", label: "Home", icon: "🏠", to: "home" },
+        { id: "stores", label: "Stores", icon: "🏪", to: "home" },
+        { id: "cart", label: "Cart", icon: "🛒", to: cartCount > 0 ? "cart" : "home" },
+      ].map((tab) => (
+        <button key={tab.id} onClick={() => setScreen(tab.to)} style={{
+          background: "none", border: "none", display: "flex", flexDirection: "column",
+          alignItems: "center", gap: 3, cursor: "pointer", position: "relative",
+          opacity: active === tab.id ? 1 : 0.5,
+        }}>
+          <span style={{ fontSize: 20 }}>{tab.icon}</span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: "#333" }}>{tab.label}</span>
+          {tab.id === "cart" && cartCount > 0 && (
+            <div style={{
+              position: "absolute", top: -3, right: -6, width: 18, height: 18, borderRadius: "50%",
+              background: "#1F8C3B", color: "#fff", fontSize: 10, fontWeight: 700,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>{cartCount}</div>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
+  // ─── DELIVERY STRIP ──────────────────────────────────────────────────
+  const DeliveryStrip = () => (
+    <div style={{
+      margin: "0 16px 10px", background: "linear-gradient(135deg, #E8F5E9, #D4EFDF)",
+      borderRadius: 12, padding: "10px 14px",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      flexShrink: 0, border: "1px solid rgba(31,140,59,0.15)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{
+          width: 28, height: 28, borderRadius: "50%", background: "#1F8C3B",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          animation: "rocketBob 1.5s ease-in-out infinite",
+        }}><span style={{ fontSize: 14 }}>🚀</span></div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#1F8C3B", letterSpacing: 0.3 }}>ARRIVING IN</div>
+          <LiveTimer minutes={8} compact />
+        </div>
+      </div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "#1F8C3B", borderRadius: 10, padding: "3px 8px", letterSpacing: 0.5 }}>LIVE</div>
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // ONBOARDING 1 - SPEED HERO
+  // ═══════════════════════════════════════════════════════════════════════
+  const Onboard1 = () => (
+    <Phone dark>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center", position: "relative" }}>
+        <div style={{ position: "absolute", inset: 0, overflow: "hidden", opacity: 0.08 }}>
+          {[...Array(12)].map((_, i) => (
+            <div key={i} style={{ position: "absolute", left: "-20%", top: `${8 + i * 8}%`, width: `${30 + Math.random() * 50}%`, height: 2, background: "#FFD700", borderRadius: 1, animation: `speedLine ${1 + Math.random() * 2}s ${Math.random() * 2}s ease-in-out infinite` }} />
+          ))}
+        </div>
+        <SpeedPulse size={100}>
+          <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, #1F8C3B, #27AE60)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, boxShadow: "0 8px 30px rgba(31,140,59,0.4)" }}>⚡</div>
+        </SpeedPulse>
+        <div style={{ marginTop: 32 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: 4, color: "#FFD700", textTransform: "uppercase", marginBottom: 10 }}>FLASH</div>
+          <div style={{ fontSize: 38, fontWeight: 900, color: "#fff", lineHeight: 1.1, letterSpacing: -1 }}>
+            Groceries in<br/><span style={{ color: "#FFD700", position: "relative" }}>8 minutes<div style={{ position: "absolute", bottom: -4, left: 0, right: 0, height: 3, background: "#FFD700", borderRadius: 2, opacity: 0.4 }}/></span>
+          </div>
+          <div style={{ fontSize: 14, color: "#A8D5BA", marginTop: 14, lineHeight: 1.5 }}>Not 30. Not 15. <strong style={{ color: "#FFD700" }}>8 minutes flat.</strong><br/>From tap to doorstep.</div>
+        </div>
+        <div style={{ display: "flex", gap: 16, marginTop: 32, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "14px 20px" }}>
+          {[{ num: "8", unit: "min", label: "Avg delivery" }, { num: "2", unit: "min", label: "Pack time" }, { num: "500+", unit: "", label: "Items ready" }].map((s, i) => (
+            <div key={i} style={{ textAlign: "center", flex: 1 }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#FFD700", lineHeight: 1 }}>{s.num}<span style={{ fontSize: 11, fontWeight: 600 }}>{s.unit}</span></div>
+              <div style={{ fontSize: 9, color: "#A8D5BA", marginTop: 3, fontWeight: 600 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding: "0 24px 40px", flexShrink: 0 }}>
+        <button onClick={() => setScreen("onboard2")} style={{ width: "100%", background: "linear-gradient(135deg, #FFD700, #FFC107)", color: "#0B3D1F", border: "none", borderRadius: 16, padding: "16px", fontSize: 16, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(255,215,0,0.3)" }}>Get Started →</button>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+          <div style={{ width: 24, height: 4, borderRadius: 2, background: "#FFD700" }} />
+          <div style={{ width: 8, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)" }} />
+          <div style={{ width: 8, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)" }} />
+        </div>
+      </div>
+    </Phone>
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // ONBOARDING 2 - TIMELINE
+  // ═══════════════════════════════════════════════════════════════════════
+  const Onboard2 = () => (
+    <Phone dark>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center", position: "relative" }}>
+        <div style={{ position: "absolute", inset: 0, overflow: "hidden", opacity: 0.06 }}>
+          {[...Array(5)].map((_, i) => (
+            <div key={i} style={{ position: "absolute", left: "50%", top: "40%", width: `${120 + i * 80}px`, height: `${120 + i * 80}px`, border: "1px solid #FFD700", borderRadius: "50%", transform: "translate(-50%, -50%)", animation: `radarPing 3s ${i * 0.5}s ease-out infinite` }} />
+          ))}
+        </div>
+        <div style={{ width: "100%", maxWidth: 260, display: "flex", flexDirection: "column" }}>
+          {[
+            { time: "0:00", icon: "👆", label: "You tap order", color: "#FFD700" },
+            { time: "0:30", icon: "📦", label: "Picker grabs items", color: "#FFA726" },
+            { time: "2:00", icon: "✅", label: "Packed & handed off", color: "#66BB6A" },
+            { time: "3:00", icon: "🏍️", label: "Rider on the way", color: "#42A5F5" },
+            { time: "8:00", icon: "🏠", label: "At your door", color: "#FFD700" },
+          ].map((step, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, animation: `fadeSlideIn 0.5s ${i * 0.15}s ease-out both` }}>
+              <div style={{ width: 40, display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${step.color}20`, border: `2px solid ${step.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, zIndex: 2 }}>{step.icon}</div>
+                {i < 4 && <div style={{ width: 2, height: 24, background: `${step.color}30`, margin: "2px 0" }} />}
+              </div>
+              <div style={{ textAlign: "left", padding: "8px 0" }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: step.color, fontVariantNumeric: "tabular-nums" }}>{step.time}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{step.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 24 }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>Every second<br/><span style={{ color: "#FFD700" }}>is tracked</span></div>
+          <div style={{ fontSize: 13, color: "#A8D5BA", marginTop: 8, lineHeight: 1.5 }}>Watch your order move in real-time.<br/>No guessing, no waiting.</div>
+        </div>
+      </div>
+      <div style={{ padding: "0 24px 40px", flexShrink: 0 }}>
+        <button onClick={() => setScreen("onboard3")} style={{ width: "100%", background: "linear-gradient(135deg, #FFD700, #FFC107)", color: "#0B3D1F", border: "none", borderRadius: 16, padding: "16px", fontSize: 16, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(255,215,0,0.3)" }}>Next →</button>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+          <div style={{ width: 8, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)" }} />
+          <div style={{ width: 24, height: 4, borderRadius: 2, background: "#FFD700" }} />
+          <div style={{ width: 8, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)" }} />
+        </div>
+      </div>
+    </Phone>
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // ONBOARDING 3 - LOCATION
+  // ═══════════════════════════════════════════════════════════════════════
+  const Onboard3 = () => {
+    const [locating, setLocating] = useState(false);
+    const [found, setFound] = useState(false);
+    const handleLocate = () => { setLocating(true); setTimeout(() => { setLocating(false); setFound(true); }, 1500); };
+    return (
+      <Phone dark>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 28px", textAlign: "center" }}>
+          <div style={{ fontSize: 48, marginBottom: 20, animation: found ? "popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275)" : "" }}>{found ? "✅" : locating ? "📡" : "📍"}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>{found ? "You're all set!" : "Set your location"}</div>
+          <div style={{ fontSize: 13, color: "#A8D5BA", lineHeight: 1.5, marginBottom: 28 }}>
+            {found
+              ? <span>Delivering to <strong style={{ color: "#FFD700" }}>Hayward, CA 94544</strong><br/>Estimated delivery: <strong style={{ color: "#FFD700" }}>8 minutes</strong></span>
+              : "We need your location to find the nearest dark store and guarantee lightning delivery."}
+          </div>
+          {!found && (
+            <button onClick={handleLocate} style={{ background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 14, padding: "14px 28px", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 10, animation: locating ? "pulse 1s ease-in-out infinite" : "" }}>
+              <span style={{ fontSize: 18 }}>{locating ? "📡" : "◎"}</span>{locating ? "Locating..." : "Use current location"}
+            </button>
+          )}
+          {found && (
+            <div style={{ background: "rgba(255,215,0,0.08)", border: "1.5px solid rgba(255,215,0,0.25)", borderRadius: 16, padding: "16px 20px", width: "100%", animation: "fadeSlideIn 0.5s ease-out" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,215,0,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🏠</div>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#FFD700" }}>{USER_ADDRESS.label}</div>
+                  <div style={{ fontSize: 12, color: "#A8D5BA" }}>{USER_ADDRESS.line1}</div>
+                </div>
+              </div>
+              <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, background: "rgba(31,140,59,0.15)", borderRadius: 8, padding: "8px 12px" }}>
+                <span style={{ fontSize: 14 }}>⚡</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#66BB6A" }}>Dark store 0.8 mi away · 8 min delivery guaranteed</span>
+              </div>
+            </div>
+          )}
+        </div>
+        <div style={{ padding: "0 24px 40px", flexShrink: 0 }}>
+          <button onClick={() => found && setScreen("home")} style={{
+            width: "100%", background: found ? "linear-gradient(135deg, #FFD700, #FFC107)" : "rgba(255,255,255,0.1)",
+            color: found ? "#0B3D1F" : "rgba(255,255,255,0.3)", border: "none", borderRadius: 16, padding: "16px",
+            fontSize: 16, fontWeight: 800, cursor: found ? "pointer" : "default",
+            boxShadow: found ? "0 4px 20px rgba(255,215,0,0.3)" : "none", transition: "all 0.3s",
+          }}>{found ? "Start Shopping ⚡" : "Set location first"}</button>
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+            <div style={{ width: 8, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)" }} />
+            <div style={{ width: 8, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)" }} />
+            <div style={{ width: 24, height: 4, borderRadius: 2, background: "#FFD700" }} />
+          </div>
+        </div>
+      </Phone>
+    );
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // HOME SCREEN (with stores section)
+  // ═══════════════════════════════════════════════════════════════════════
+  const HomeScreen = () => (
+    <Phone dark>
+      <div style={{ padding: "0 16px 10px", flexShrink: 0 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+              <div style={{ background: "rgba(255,215,0,0.15)", borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 800, color: "#FFD700", display: "flex", alignItems: "center", gap: 4, animation: "flashBadge 2s ease-in-out infinite" }}>
+                <span style={{ fontSize: 8 }}>⚡</span> DELIVERING IN
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+              <span style={{ fontSize: 28, fontWeight: 900, color: "#FFD700", lineHeight: 1 }}>8 min</span>
+              <span style={{ fontSize: 11, color: "#A8D5BA", fontWeight: 600 }}>or it's free</span>
+            </div>
+            <div style={{ fontSize: 11, color: "#A8D5BA", marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}>📍 {USER_ADDRESS.full} <span style={{ color: "#FFD700" }}>▼</span></div>
+          </div>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, cursor: "pointer" }}>♡</div>
+        </div>
+        <div style={{ marginTop: 12, background: "#fff", borderRadius: 12, display: "flex", alignItems: "center", padding: "10px 14px", gap: 10 }}>
+          <span style={{ color: "#999", fontSize: 16 }}>🔍</span>
+          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder='Search "chips"' style={{ border: "none", outline: "none", flex: 1, fontSize: 14, color: "#333", background: "transparent" }} />
+          <span style={{ color: "#999", fontSize: 16 }}>🎤</span>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", background: "#F7F7F7", borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
+        {/* Speed promise */}
+        <div style={{ margin: "14px 12px 6px", padding: "12px 16px", background: "linear-gradient(135deg, #0B3D1F, #145A2F)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 2px 12px rgba(11,61,31,0.3)" }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#FFD700" }}>⚡ Speed Promise</div>
+            <div style={{ fontSize: 11, color: "#A8D5BA", marginTop: 2 }}>8-min delivery or <strong style={{ color: "#FFD700" }}>$5 off</strong> next order</div>
+          </div>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,215,0,0.1)", border: "2px solid #FFD700", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: "#FFD700", animation: "countPulse 1s ease-in-out infinite" }}>8m</div>
+        </div>
+
+        {/* Categories */}
+        <div style={{ display: "flex", gap: 8, padding: "10px 16px 8px", overflowX: "auto" }}>
+          {CATEGORIES.map((cat) => (
+            <button key={cat.id} onClick={() => setActiveCategory(cat.id)} style={{
+              flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: "none",
+              background: activeCategory === cat.id ? "#0B3D1F" : "#fff",
+              color: activeCategory === cat.id ? "#FFD700" : "#333",
+              fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.06)", transition: "all 0.2s",
+            }}><span style={{ fontSize: 14 }}>{cat.icon}</span> {cat.name}</button>
+          ))}
+        </div>
+
+        {/* Flash warehouse section */}
+        <div style={{ padding: "8px 16px 2px", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#1A1A1A" }}>
+            {searchQuery ? `Results for "${searchQuery}"` : "⚡ Flash Warehouse"}
+          </div>
+          {!searchQuery && <div style={{ fontSize: 9, fontWeight: 800, color: "#fff", background: "#1F8C3B", borderRadius: 6, padding: "2px 7px" }}>8 MIN</div>}
+        </div>
+        {!searchQuery && <div style={{ padding: "0 16px 6px", fontSize: 11, color: "#888" }}>From our dark store · Fastest delivery</div>}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, padding: "0 12px 12px" }}>
+          {filteredProducts.map((p) => <ProductCard key={p.id} product={p} />)}
+        </div>
+
+        {/* ═══ STORES SECTION ═══ */}
+        {!searchQuery && (
+          <>
+            <div style={{ padding: "16px 16px 4px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#1A1A1A" }}>🏪 Stores Near You</div>
+                <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>Partner stores · 15-28 min delivery</div>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1F8C3B", cursor: "pointer" }}>See all ›</div>
+            </div>
+
+            {/* Speed comparison nudge */}
+            <div style={{ margin: "6px 12px 10px", padding: "8px 12px", background: "linear-gradient(135deg, #FFF8E1, #FFF3E0)", borderRadius: 10, display: "flex", alignItems: "center", gap: 8, border: "1px solid rgba(255,152,0,0.15)" }}>
+              <span style={{ fontSize: 14 }}>💡</span>
+              <div style={{ fontSize: 11, color: "#795548" }}>
+                <strong>Tip:</strong> Flash Warehouse items arrive in <strong style={{ color: "#1F8C3B" }}>8 min</strong> · Store items take <strong style={{ color: "#E65100" }}>15-28 min</strong>
+              </div>
+            </div>
+
+            {/* Store cards - horizontal scroll */}
+            <div style={{ display: "flex", gap: 10, padding: "0 12px 16px", overflowX: "auto" }}>
+              {STORES.map((store) => (
+                <div key={store.id} onClick={() => openStore(store)} style={{
+                  flexShrink: 0, width: 200, borderRadius: 16, overflow: "hidden",
+                  background: "#fff", border: "1px solid #F0F0F0", cursor: "pointer",
+                  transition: "transform 0.15s, box-shadow 0.15s",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                }}>
+                  {/* Store header */}
+                  <div style={{ background: store.color, padding: "16px 14px 12px", position: "relative" }}>
+                    <div style={{ fontSize: 32 }}>{store.emoji}</div>
+                    <div style={{
+                      position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.6)",
+                      borderRadius: 6, padding: "2px 7px", fontSize: 9, fontWeight: 800, color: "#fff",
+                      display: "flex", alignItems: "center", gap: 3,
+                    }}>
+                      🏪 {store.eta} MIN
+                    </div>
+                  </div>
+                  <div style={{ padding: "10px 14px 14px" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>{store.name}</div>
+                    <div style={{ fontSize: 10, color: store.accent, fontWeight: 600, marginTop: 1 }}>{store.type}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, fontSize: 10, color: "#888" }}>
+                      <span>⭐ {store.rating}</span>
+                      <span>·</span>
+                      <span>{store.distance}</span>
+                      <span>·</span>
+                      <span>{store.eta} min</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Banners */}
+            <div style={{ padding: "4px 12px 16px" }}>
+              {[
+                { title: "Ice Cream", subtitle: "STORE", bg: "linear-gradient(135deg, #FFE4EC, #FFC2D4)", emoji: "🍦" },
+                { title: "Fresh Fruits", subtitle: "Daily Deals", bg: "linear-gradient(135deg, #E8F5E9, #C8E6C9)", emoji: "🍊" },
+              ].map((b, i) => (
+                <div key={i} style={{ background: b.bg, borderRadius: 16, padding: "20px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "#C0392B" }}>{b.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#E74C3C", background: "#FFD700", display: "inline-block", padding: "2px 10px", borderRadius: 4, marginTop: 4 }}>{b.subtitle}</div>
+                  </div>
+                  <span style={{ fontSize: 48 }}>{b.emoji}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        <div style={{ height: 80 }} />
+      </div>
+
+      {/* Cart bar */}
+      {cartCount > 0 && (
+        <div onClick={() => setScreen("cart")} style={{
+          position: "absolute", bottom: 70, left: 12, right: 12,
+          background: "linear-gradient(135deg, #1F8C3B, #27AE60)",
+          borderRadius: 14, padding: "12px 16px",
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          color: "#fff", cursor: "pointer", boxShadow: "0 4px 20px rgba(31,140,59,0.4)",
+          zIndex: 15, animation: "slideUp 0.3s ease-out",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🛒</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{cartCount} item{cartCount > 1 ? "s" : ""}</div>
+              <div style={{ fontSize: 11, opacity: 0.85 }}>${cartTotal.toFixed(2)}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {flashItems.length > 0 && <div style={{ fontSize: 10, fontWeight: 800, background: "rgba(255,215,0,0.2)", color: "#FFD700", borderRadius: 6, padding: "3px 8px" }}>⚡ 8 MIN</div>}
+            {storeItems.length > 0 && <div style={{ fontSize: 10, fontWeight: 800, background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 6, padding: "3px 8px" }}>🏪 +stores</div>}
+            <span style={{ fontSize: 14, fontWeight: 700 }}>View Cart ›</span>
+          </div>
+        </div>
+      )}
+      <BottomNav active="home" />
+    </Phone>
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // STORE DETAIL SCREEN
+  // ═══════════════════════════════════════════════════════════════════════
+  const StoreScreen = () => {
+    if (!activeStore) return null;
+    const s = activeStore;
+    return (
+      <Phone>
+        {/* Store hero */}
+        <div style={{ background: s.color, padding: "0 16px 16px", flexShrink: 0, position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <button onClick={() => setScreen("home")} style={{ background: "rgba(0,0,0,0.08)", border: "none", width: 32, height: 32, borderRadius: "50%", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>←</button>
+            <span style={{ flex: 1 }} />
+            <div style={{ background: "rgba(0,0,0,0.06)", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: "#555", display: "flex", alignItems: "center", gap: 4 }}>
+              🏪 {s.eta} min delivery
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>{s.emoji}</div>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#1A1A1A" }}>{s.name}</div>
+              <div style={{ fontSize: 12, color: s.accent, fontWeight: 600 }}>{s.type}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, fontSize: 11, color: "#888" }}>
+                <span>⭐ {s.rating} ({s.reviews})</span>
+                <span>·</span>
+                <span>{s.distance}</span>
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize: 12, color: "#666", marginTop: 8, fontStyle: "italic" }}>{s.tagline}</div>
+        </div>
+
+        {/* Speed comparison bar */}
+        <div style={{ margin: "12px 16px 8px", padding: "10px 14px", background: "#FFF8E1", borderRadius: 10, display: "flex", alignItems: "center", gap: 10, border: "1px solid rgba(255,152,0,0.15)", flexShrink: 0 }}>
+          <span style={{ fontSize: 14 }}>⚡</span>
+          <div style={{ fontSize: 11, color: "#795548", flex: 1 }}>
+            Store delivery: <strong style={{ color: "#E65100" }}>{s.eta} min</strong>
+            <span style={{ margin: "0 6px", color: "#ccc" }}>vs</span>
+            Flash Warehouse: <strong style={{ color: "#1F8C3B" }}>8 min</strong>
+          </div>
+        </div>
+
+        {/* Products */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 12px" }}>
+          <div style={{ padding: "8px 4px 6px", fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>All Products</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, paddingBottom: 12 }}>
+            {s.products.map((p) => <ProductCard key={p.id} product={p} isStore storeEta={s.eta} />)}
+          </div>
+
+          {/* Upsell nudge */}
+          <div onClick={() => setScreen("home")} style={{
+            margin: "4px 4px 16px", padding: "12px 14px",
+            background: "linear-gradient(135deg, #E8F5E9, #D4EFDF)",
+            borderRadius: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
+            border: "1px solid rgba(31,140,59,0.15)",
+          }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#1F8C3B", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 16 }}>⚡</span>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1F8C3B" }}>Need it faster?</div>
+              <div style={{ fontSize: 10, color: "#6BBF7B" }}>Browse Flash Warehouse for 8-min delivery</div>
+            </div>
+            <span style={{ fontSize: 14, color: "#1F8C3B" }}>›</span>
+          </div>
+          <div style={{ height: 80 }} />
+        </div>
+
+        {cartCount > 0 && (
+          <div onClick={() => setScreen("cart")} style={{
+            position: "absolute", bottom: 70, left: 12, right: 12,
+            background: "linear-gradient(135deg, #1F8C3B, #27AE60)",
+            borderRadius: 14, padding: "12px 16px",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            color: "#fff", cursor: "pointer", boxShadow: "0 4px 20px rgba(31,140,59,0.4)",
+            zIndex: 15,
+          }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🛒</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{cartCount} item{cartCount > 1 ? "s" : ""}</div>
+              <div style={{ fontSize: 11, opacity: 0.85 }}>${cartTotal.toFixed(2)}</div>
+            </div>
+          </div>
+          <span style={{ fontSize: 14, fontWeight: 700 }}>View Cart ›</span>
+          </div>
+        )}
+        <BottomNav active="stores" />
+      </Phone>
+    );
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CART SCREEN (grouped by source)
+  // ═══════════════════════════════════════════════════════════════════════
+  const CartScreen = () => (
+    <Phone>
+      <div style={{ padding: "4px 16px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button onClick={() => setScreen("home")} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
+          <span style={{ fontSize: 18, fontWeight: 700 }}>My Cart</span>
+        </div>
+        <span style={{ fontSize: 13, color: "#888", fontWeight: 600 }}>Step: 1/3</span>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
+        {cartItems.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#999" }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🛒</div>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>Your cart is empty</div>
+          </div>
+        ) : (
+          <>
+            {/* Flash warehouse group */}
+            {flashItems.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0 6px" }}>
+                  <div style={{ background: "linear-gradient(135deg, #0B3D1F, #1F8C3B)", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 800, color: "#FFD700", display: "flex", alignItems: "center", gap: 4 }}>
+                    ⚡ Flash Warehouse
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#1F8C3B" }}>8 min</div>
+                </div>
+                <div style={{ background: "linear-gradient(135deg, #E8F5E9, #D4EFDF)", borderRadius: 10, padding: "8px 12px", marginBottom: 8, display: "flex", alignItems: "center", gap: 8, fontSize: 11, border: "1px solid rgba(31,140,59,0.15)" }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#1F8C3B", display: "flex", alignItems: "center", justifyContent: "center", animation: "rocketBob 1.5s ease-in-out infinite" }}>
+                    <span style={{ fontSize: 12 }}>🚀</span>
+                  </div>
+                  <span style={{ fontWeight: 700, color: "#1F8C3B" }}>ARRIVING IN</span>
+                  <LiveTimer minutes={8} compact />
+                  <div style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: "#fff", background: "#1F8C3B", borderRadius: 8, padding: "2px 6px" }}>LIVE</div>
+                </div>
+                {flashItems.map((item) => (
+                  <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #F0F0F0" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 10, background: "#F8F8F8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>{item.img}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{item.name}</div>
+                      <div style={{ fontSize: 11, color: "#888" }}>{item.weight}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2 }}>${item.price.toFixed(2)}</div>
+                    </div>
+                    <QtyStepper id={item.id} qty={item.qty} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Store groups */}
+            {Object.entries(storeGroups).map(([storeId, group]) => (
+              <div key={storeId} style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0 6px" }}>
+                  <div style={{ background: "linear-gradient(135deg, #455A64, #607D8B)", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: 4 }}>
+                    🏪 {group.store.name}
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#607D8B" }}>{group.store.eta} min</div>
+                </div>
+                {group.items.map((item) => (
+                  <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #F0F0F0" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 10, background: "#F8F8F8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>{item.img}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{item.name}</div>
+                      <div style={{ fontSize: 11, color: "#888" }}>{item.weight}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2 }}>${item.price.toFixed(2)}</div>
+                    </div>
+                    <QtyStepper id={item.id} qty={item.qty} />
+                  </div>
+                ))}
+              </div>
+            ))}
+
+            {/* Upsell to flash if only store items */}
+            {flashItems.length === 0 && storeItems.length > 0 && (
+              <div onClick={() => setScreen("home")} style={{
+                margin: "4px 0 12px", padding: "12px 14px",
+                background: "linear-gradient(135deg, #E8F5E9, #D4EFDF)", borderRadius: 12,
+                cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
+                border: "1px solid rgba(31,140,59,0.15)",
+              }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#1F8C3B", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 14 }}>⚡</span>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#1F8C3B" }}>Switch to Flash for 8-min delivery</div>
+                  <div style={{ fontSize: 10, color: "#6BBF7B" }}>500+ items available in the warehouse</div>
+                </div>
+                <span style={{ color: "#1F8C3B" }}>›</span>
+              </div>
+            )}
+
+            <button onClick={() => setScreen("home")} style={{ background: "none", border: "none", color: "#1F8C3B", fontSize: 13, fontWeight: 700, padding: "8px 0", cursor: "pointer" }}>Add more items ›</button>
+          </>
+        )}
+        <div style={{ height: 80 }} />
+      </div>
+
+      {cartItems.length > 0 && (
+        <div style={{ padding: "12px 16px 28px", flexShrink: 0 }}>
+          <button onClick={() => setScreen("address")} style={{
+            width: "100%", background: "#1F8C3B", color: "#fff", border: "none", borderRadius: 14,
+            padding: "14px", fontSize: 15, fontWeight: 700, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            boxShadow: "0 4px 16px rgba(31,140,59,0.3)",
+          }}>Confirm delivery address 📍</button>
+        </div>
+      )}
+    </Phone>
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // ADDRESS SCREEN
+  // ═══════════════════════════════════════════════════════════════════════
+  const AddressScreen = () => {
+    const [confirmed, setConfirmed] = useState(false);
+    return (
+      <Phone>
+        <div style={{ padding: "4px 16px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={() => setScreen("cart")} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
+            <span style={{ fontSize: 18, fontWeight: 700 }}>Add address</span>
+          </div>
+          <span style={{ fontSize: 13, color: "#888", fontWeight: 600 }}>Step: 2/3</span>
+        </div>
+        <div style={{ margin: "0 16px 14px", position: "relative" }}>
+          <input placeholder="Search for a new area, locality..." style={{ width: "100%", border: "1.5px solid #E0E0E0", borderRadius: 12, padding: "11px 14px 11px 38px", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#999" }}>🔍</span>
+        </div>
+        <div style={{ margin: "0 16px", height: 200, borderRadius: 16, background: "linear-gradient(135deg, #E8F0E3, #D4E6C8, #C8DFC0)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, opacity: 0.15 }}>
+            {[...Array(10)].map((_, i) => <div key={i} style={{ position: "absolute", left: `${5 + i * 10}%`, top: `${15 + (i % 4) * 18}%`, width: `${30 + i * 6}px`, height: 4, background: "#7CB08A", borderRadius: 2, transform: `rotate(${i * 20 - 40}deg)` }} />)}
+          </div>
+          <div style={{ position: "absolute", top: "40%", left: "50%", transform: "translate(-50%, -100%)", fontSize: 32, filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.2))", animation: "pinBounce 2s ease-in-out infinite" }}>📍</div>
+          <button style={{ position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)", background: "#fff", border: "1.5px solid #1F8C3B", borderRadius: 20, padding: "8px 18px", fontSize: 12, fontWeight: 700, color: "#1F8C3B", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, boxShadow: "0 2px 10px rgba(0,0,0,0.1)", whiteSpace: "nowrap" }}>◎ Current location</button>
+        </div>
+        <div style={{ padding: 16, flex: 1 }}>
+          <div style={{ fontSize: 12, color: "#888", fontWeight: 600, marginBottom: 10 }}>Delivering your order to</div>
+          <div onClick={() => setConfirmed(true)} style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderRadius: 12, border: `1.5px solid ${confirmed ? "#1F8C3B" : "#E8E8E8"}`, background: confirmed ? "#F0FAF0" : "#fff", cursor: "pointer", transition: "all 0.2s" }}>
+            <span style={{ fontSize: 18 }}>🏠</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{USER_ADDRESS.label}</div>
+              <div style={{ fontSize: 12, color: "#888" }}>{USER_ADDRESS.line1}</div>
+            </div>
+            {confirmed && <span style={{ color: "#1F8C3B", fontWeight: 700, fontSize: 12 }}>Change</span>}
+          </div>
+          {confirmed && (
+            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #E8F5E9, #D4EFDF)", borderRadius: 10, padding: "10px 14px", animation: "fadeSlideIn 0.3s ease-out" }}>
+              <span style={{ fontSize: 16 }}>⚡</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#1F8C3B" }}>8-minute delivery confirmed</div>
+                <div style={{ fontSize: 10, color: "#6BBF7B" }}>Dark store is 0.8 mi from your location</div>
+              </div>
+            </div>
+          )}
+        </div>
+        <div style={{ padding: "12px 16px 28px", flexShrink: 0 }}>
+          <button onClick={() => confirmed && setScreen("checkout")} style={{ width: "100%", background: confirmed ? "#1F8C3B" : "#ccc", color: "#fff", border: "none", borderRadius: 14, padding: "14px", fontSize: 15, fontWeight: 700, cursor: confirmed ? "pointer" : "default", boxShadow: confirmed ? "0 4px 16px rgba(31,140,59,0.3)" : "none" }}>Confirm location & proceed</button>
+        </div>
+      </Phone>
+    );
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CHECKOUT SCREEN
+  // ═══════════════════════════════════════════════════════════════════════
+  const CheckoutScreen = () => {
+    const handlingCharge = 0.99;
+    const grandTotal = (cartTotal + handlingCharge).toFixed(2);
+    return (
+      <Phone>
+        <div style={{ padding: "4px 16px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={() => setScreen("address")} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
+            <span style={{ fontSize: 18, fontWeight: 700 }}>Checkout</span>
+          </div>
+          <span style={{ fontSize: 13, color: "#888", fontWeight: 600 }}>Step: 3/3</span>
+        </div>
+
+        {flashItems.length > 0 && <DeliveryStrip />}
+
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
+          {/* Grouped items */}
+          {flashItems.length > 0 && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0 6px" }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#FFD700", background: "linear-gradient(135deg, #0B3D1F, #1F8C3B)", borderRadius: 6, padding: "2px 8px" }}>⚡ Flash</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#1F8C3B" }}>8 min</span>
+              </div>
+              {flashItems.map((item) => (
+                <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #F0F0F0" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 8, background: "#F8F8F8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{item.img}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600 }}>{item.name}</div>
+                    <div style={{ fontSize: 10, color: "#888" }}>{item.weight} · ${item.price.toFixed(2)}</div>
+                  </div>
+                  <QtyStepper id={item.id} qty={item.qty} small />
+                </div>
+              ))}
+            </>
+          )}
+          {Object.entries(storeGroups).map(([storeId, group]) => (
+            <div key={storeId}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 0 6px" }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: "linear-gradient(135deg, #455A64, #607D8B)", borderRadius: 6, padding: "2px 8px" }}>🏪 {group.store.name}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#607D8B" }}>{group.store.eta} min</span>
+              </div>
+              {group.items.map((item) => (
+                <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #F0F0F0" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 8, background: "#F8F8F8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{item.img}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600 }}>{item.name}</div>
+                    <div style={{ fontSize: 10, color: "#888" }}>{item.weight} · ${item.price.toFixed(2)}</div>
+                  </div>
+                  <QtyStepper id={item.id} qty={item.qty} small />
+                </div>
+              ))}
+            </div>
+          ))}
+
+          <button onClick={() => setScreen("home")} style={{ background: "none", border: "none", color: "#1F8C3B", fontSize: 13, fontWeight: 700, padding: "10px 0", cursor: "pointer" }}>Add more items ›</button>
+
+          {/* Bill */}
+          <div style={{ marginTop: 8, paddingTop: 14, borderTop: "1px solid #eee" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Bill details</div>
+            {[
+              { icon: "📦", label: "Items total", value: `$${cartTotal.toFixed(2)}` },
+              { icon: "🚚", label: "Delivery charge", value: <span><span style={{ textDecoration: "line-through", color: "#999", marginRight: 6 }}>$3.99</span><span style={{ color: "#1F8C3B", fontWeight: 700 }}>FREE</span></span> },
+              { icon: "🛍", label: "Handling charge", value: `$${handlingCharge}` },
+              { icon: "💝", label: "Delivery tip", value: <span style={{ color: "#1F8C3B", fontWeight: 600, cursor: "pointer" }}>Add tip</span> },
+            ].map((row, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", fontSize: 13, color: "#555" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 12 }}>{row.icon}</span> {row.label}</span>
+                <span>{row.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Delivery address */}
+          <div style={{ marginTop: 12, padding: "10px 14px", background: "#F0FAF0", borderRadius: 12, display: "flex", alignItems: "center", gap: 10, border: "1px solid rgba(31,140,59,0.15)" }}>
+            <span style={{ fontSize: 14 }}>📍</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, color: "#888", fontWeight: 600 }}>DELIVERING TO</div>
+              <div style={{ fontSize: 12, fontWeight: 700 }}>{USER_ADDRESS.label} · {USER_ADDRESS.line1}</div>
+            </div>
+            {flashItems.length > 0 && <div style={{ fontSize: 9, fontWeight: 800, color: "#1F8C3B", background: "rgba(31,140,59,0.1)", borderRadius: 6, padding: "3px 7px" }}>⚡ 8 MIN</div>}
+          </div>
+
+          {/* Payment */}
+          <div style={{ marginTop: 12, padding: 12, background: "#F8F8F8", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 36, height: 24, background: "#fff", borderRadius: 4, border: "1px solid #ddd", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#4285F4" }}>G Pay</div>
+            <div>
+              <div style={{ fontSize: 10, color: "#999", fontWeight: 600 }}>PAY USING</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>Google Pay ▾</div>
+            </div>
+          </div>
+          <div style={{ height: 80 }} />
+        </div>
+
+        <div style={{ padding: "12px 16px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid #eee", flexShrink: 0, background: "#fff" }}>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 800 }}>${grandTotal}</div>
+            <div style={{ fontSize: 11, color: "#1F8C3B", fontWeight: 600 }}>TOTAL</div>
+          </div>
+          <button onClick={placeOrder} style={{ background: "linear-gradient(135deg, #1F8C3B, #27AE60)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 28px", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, boxShadow: "0 4px 16px rgba(31,140,59,0.3)" }}>Place Order ›</button>
+        </div>
+      </Phone>
+    );
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // ORDER PLACED
+  // ═══════════════════════════════════════════════════════════════════════
+  const OrderPlacedScreen = () => (
+    <Phone>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", position: "relative" }}>
+        {showConfetti && <Confetti />}
+        <SpeedPulse size={90}>
+          <div style={{ width: 72, height: 72, borderRadius: "50%", background: "linear-gradient(135deg, #E8F5E9, #C8E6C9)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, animation: "popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275)" }}>🛒</div>
+        </SpeedPulse>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "#1A1A1A", marginTop: 20, marginBottom: 8 }}>Order placed!</div>
+        <div style={{ background: "linear-gradient(135deg, #0B3D1F, #145A2F)", borderRadius: 16, padding: "16px 24px", marginTop: 8, textAlign: "center", boxShadow: "0 4px 20px rgba(11,61,31,0.2)" }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "#A8D5BA", marginBottom: 6 }}>ARRIVING IN</div>
+          <LiveTimer minutes={8} bright />
+          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FFD700", animation: "blink 1s ease-in-out infinite" }} />
+            <span style={{ fontSize: 11, color: "#A8D5BA", fontWeight: 600 }}>Rider is picking up your order</span>
+          </div>
+        </div>
+        <div style={{ marginTop: 16, fontSize: 12, color: "#888", display: "flex", alignItems: "center", gap: 6 }}>📍 Delivering to <strong style={{ color: "#333" }}>{USER_ADDRESS.full}</strong></div>
+      </div>
+      <div style={{ padding: "12px 16px 28px", flexShrink: 0 }}>
+        <button onClick={resetOrder} style={{ width: "100%", background: "#fff", color: "#1A1A1A", border: "2px solid #E0E0E0", borderRadius: 14, padding: "14px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Continue shopping</button>
+      </div>
+    </Phone>
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════════════════════
+  const screens = {
+    onboard1: Onboard1, onboard2: Onboard2, onboard3: Onboard3,
+    home: HomeScreen, store: StoreScreen, cart: CartScreen,
+    address: AddressScreen, checkout: CheckoutScreen, placed: OrderPlacedScreen,
+  };
+  const CurrentScreen = screens[screen];
+
+  const navItems = [
+    { id: "onboard1", label: "⚡ Welcome" }, { id: "onboard2", label: "🕐 Timeline" },
+    { id: "onboard3", label: "📍 Location" }, { id: "home", label: "🏠 Home" },
+    { id: "store", label: "🏪 Store" }, { id: "cart", label: "🛒 Cart" },
+    { id: "address", label: "📍 Address" }, { id: "checkout", label: "💳 Checkout" },
+    { id: "placed", label: "✅ Placed" },
+  ];
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(145deg, #F0F4F8, #E2E8F0)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 16px", fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      <style>{`
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+        @keyframes confettiFall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(700px) rotate(720deg); } }
+        @keyframes pinBounce { 0%, 100% { transform: translate(-50%, -100%); } 50% { transform: translate(-50%, -110%); } }
+        @keyframes speedPulse { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(1.6); opacity: 0; } }
+        @keyframes speedLine { 0% { transform: translateX(-100%); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateX(300%); opacity: 0; } }
+        @keyframes radarPing { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.4; } 100% { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes flashBadge { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes countPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        @keyframes rocketBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { display: none; }
+        input::placeholder { color: #aaa; }
+      `}</style>
+
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 4, color: "#1F8C3B", textTransform: "uppercase", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <span style={{ fontSize: 14 }}>⚡</span> FLASH DELIVERY
+        </div>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: "#1A1A1A", margin: 0, letterSpacing: -0.5 }}>Quick Commerce Prototype</h1>
+        <p style={{ fontSize: 13, color: "#888", margin: "6px 0 0" }}>Onboarding → Shop → Stores → Cart → Checkout → Delivered</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap", justifyContent: "center" }}>
+        {navItems.map((s) => (
+          <button key={s.id} onClick={() => { if (s.id === "store" && !activeStore) { setActiveStore(STORES[0]); } setScreen(s.id); }} style={{
+            padding: "6px 12px", borderRadius: 20, border: "none",
+            background: screen === s.id ? "#1F8C3B" : "#fff",
+            color: screen === s.id ? "#fff" : "#555",
+            fontSize: 11, fontWeight: 600, cursor: "pointer",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)", transition: "all 0.2s",
+          }}>{s.label}</button>
+        ))}
+      </div>
+
+      <CurrentScreen />
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById('root')).render(<QuickCommerceApp />);
+</script>
+</body>
+</html>
